@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Katalog Produk Interaktif</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Variabel CSS dan Gaya Dasar */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+        :root {
+            --primary-color: #007bff;
+            --primary-dark: #0056b3;
+            --secondary-color: #28a745;
+            --background-light: #f8f9fa; 
+            --card-background: #ffffff;
+            --text-color: #343a40;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+
+            /* Warna Eksklusif */
+            --bestseller-color: #ffc107; /* Emas */
+            --promo-color: #dc3545; /* Merah Diskon */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header a {
+            font-size: 2em;
+            color: var(--primary-dark);
+            margin-right: 20px;
+            transition: color 0.3s;
+        }
+        .header a:hover {
+            color: var(--primary-color);
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            font-weight: 700;
+            font-size: 2.2em;
+            margin: 0;
+        }
+
+        .data-table-container {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            margin-bottom: 30px;
+        }
+        
+        .table-header { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .table-header h2 {
+            margin: 0;
+            color: var(--primary-dark);
+            font-size: 1.5em;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 5px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            color: white;
+            background-color: var(--primary-color);
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-add {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-add:hover {
+            background-color: #1e7e34;
+        }
+
+        /* --- STYLES UNTUK TAMPILAN KATALOG KARTU --- */
+
+        #katalog-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Bagian Kategori (Elemen yang Dapat Di-Drag) */
+        .category-section {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: var(--background-light);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            cursor: grab; 
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+        
+        .category-section.dragging {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); 
+            opacity: 0.5;
+            background-color: #e0f7fa;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        .category-header h3 {
+            margin: 0;
+            color: var(--primary-dark);
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .category-header .drag-handle {
+            color: var(--primary-color);
+            font-size: 1.2em;
+            cursor: grab;
+            margin-left: 10px;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding-top: 10px;
+            /* === PERUBAHAN UNTUK MERATAKAN TENGAH KARTU PRODUK === */
+            justify-content: center; /* Memastikan grid berada di tengah container */
+            place-content: center; /* Meratakan kartu di tengah jika baris tidak penuh */
+        }
+        
+        /* Kartu Produk Standar */
+        .product-card {
+            background-color: var(--card-background);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-name {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        /* Informasi Harga & Keuntungan */
+        .price-info {
+            margin-bottom: 10px;
+        }
+
+        .harga-jual {
+            color: var(--secondary-color);
+            font-weight: 600;
+            font-size: 1.1em;
+            display: block;
+        }
+        
+        .harga-pokok {
+            color: var(--danger-color);
+            font-weight: 500;
+            font-size: 0.9em;
+            display: block;
+        }
+        .keuntungan-bersih {
+            color: var(--primary-dark);
+            font-weight: 700;
+            font-size: 1em;
+            margin-top: 5px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 5px;
+        }
+        .keuntungan-bersih i {
+            margin-right: 5px;
+        }
+        
+        .stock-info {
+            font-size: 0.9em;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .recipe-info {
+            flex-grow: 1; 
+            margin-top: 5px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .recipe-info h4 {
+            font-size: 0.95em;
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .recipe-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85em;
+        }
+        
+        .recipe-list li {
+            margin-bottom: 3px;
+            color: #6c757d;
+        }
+        .recipe-list strong {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        /* Tindakan Kartu (Tombol) - Sudah di tengah */
+        .card-actions {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            justify-content: center; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+        }
+
+        /* --- STYLES UNTUK KATEGORI EKSKLUSIF --- */
+
+        /* Bestseller Style */
+        .category-section.bestseller {
+            background: linear-gradient(135deg, #fffbe6, #fff4b7); /* Latar belakang Emas/Krem */
+            border: 2px solid var(--bestseller-color);
+            box-shadow: 0 5px 20px rgba(255, 193, 7, 0.4);
+            animation: pulse-border 1.5s infinite alternate;
+        }
+        .category-section.bestseller .category-header h3 {
+            color: #d4a72d;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6em;
+        }
+        .category-section.bestseller .category-header .drag-handle {
+            color: #d4a72d;
+        }
+        .category-section.bestseller .product-card {
+             border: 1px solid #ffeb84;
+             background-color: #fff;
+             box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+        }
+        /* Style untuk total terjual di Bestseller */
+        .category-section.bestseller .stock-info:last-of-type {
+            color: #d4a72d;
+            font-weight: 700;
+            margin-top: -5px; /* Sedikit naik agar lebih menonjol */
+        }
+
+
+        /* Promo Style */
+        .category-section.promo {
+            background-color: #ffeaea; /* Latar belakang Merah Muda */
+            border: 2px solid var(--promo-color);
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+            animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both infinite;
+        }
+        .category-section.promo .category-header h3 {
+            color: var(--promo-color);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6em;
+        }
+        .category-section.promo .category-header .drag-handle {
+            color: var(--promo-color);
+        }
+        .category-section.promo .product-card {
+             border: 1px dashed var(--promo-color);
+             background-color: #fff;
+             box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+        }
+        
+        /* Animasi */
+        @keyframes pulse-border {
+            from { border-color: var(--bestseller-color); }
+            to { border-color: #ffeeb2; }
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* --- MODAL STYLES --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto; 
+        }
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            margin: 20px auto; 
+        }
+        .close-button {
+            color: #aaa;
+            font-size: 30px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+            z-index: 1001; 
+        }
+        .close-button:hover {
+            color: var(--danger-color);
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        /* Style untuk dropdown produk agar terlihat seperti input */
+        .form-group select#product-name-select { 
+            background-color: #fff;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+        }
+        #bahan-mentah-group {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            background-color: var(--background-light);
+        }
+        #bahan-mentah-group h4 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            font-size: 1em;
+            font-weight: 600;
+        }
+        .bahan-mentah-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .bahan-mentah-item select {
+            flex-grow: 2;
+        }
+        .bahan-mentah-item input.kuantitas-bahan-mentah {
+            flex-grow: 1;
+        }
+        .bahan-mentah-item button {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .bahan-mentah-item button:hover {
+             background-color: #bd2130;
+        }
+        .btn-add-bahan {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-add-bahan:hover {
+            background-color: #5a6268;
+        }
+        .btn-save-modal {
+            background-color: var(--primary-color);
+            color: white;
+            margin-top: 25px;
+            width: 100%;
+        }
+
+        .price-label-promo {
+            color: var(--promo-color);
+            font-weight: 700;
+        }
+        .original-price-label {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <a href="index.html" aria-label="Kembali ke Beranda"><i class="fas fa-arrow-left"></i></a>
+            <h1>Katalog Produk</h1>
+        </div>
+        
+        <div class="data-table-container">
+            <div class="table-header">
+                <h2>Daftar Produk Jadi <i class="fas fa-box-open"></i></h2>
+                <div class="btn-group">
+                    <button class="btn btn-add" onclick="tampilkanModalProduk('add', false)"><i class="fas fa-plus"></i> Tambah Produk</button>
+                    <button class="btn" onclick="tampilkanModalProduk('add', true)" style="background-color: var(--promo-color);"><i class="fas fa-tags"></i> Tambah Promo</button>
+                    <button class="btn" onclick="exportKatalog()" style="background-color: var(--info-color);"><i class="fas fa-file-export"></i> Export</button>
+                    <input type="file" id="import-file" style="display: none;" onchange="importKatalog(event)">
+                    <button class="btn" onclick="document.getElementById('import-file').click()" style="background-color: var(--info-color);"><i class="fas fa-file-import"></i> Import</button>
+                </div>
+            </div>
+            
+            <div id="katalog-list-container">
+                </div>
+        </div>
+    </div>
+
+    <div id="katalogModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="tutupModalProduk()">&times;</span>
+            <h3 id="modal-title">Tambah Produk Baru</h3>
+            <form id="form-katalog">
+                <input type="hidden" id="product-mode" name="product-mode" value="add">
+                <input type="hidden" id="is-promo-mode" name="is-promo-mode" value="false">
+                <input type="hidden" id="product-original-name" name="product-original-name"> 
+
+                <div class="form-group" id="product-name-group">
+                    <label for="product-name-select">Nama Produk:</label>
+                    <select id="product-name-select" name="product-name" required></select>
+                </div>
+                
+                <div class="form-group" id="modal-kategori-group">
+                    <label for="product-category">Kategori Produk:</label>
+                    <input type="text" id="product-category" name="product-category" placeholder="Contoh: Makanan, Minuman, Dessert" required>
+                </div>
+                
+                <div class="form-group" id="original-price-group">
+                    <label class="original-price-label">Harga Jual Normal:</label>
+                    <div id="original-price-display" class="original-price-label" style="font-weight: 600;">Rp 0</div>
+                </div>
+
+                <div class="form-group" id="product-price-group">
+                    <label for="product-price" id="price-label">Harga Jual (Rp):</label>
+                    <input type="number" id="product-price" name="product-price" min="0" step="100" required>
+                </div>
+                
+                <div class="form-group" id="bahan-mentah-group">
+                    <h4>Resep: Bahan Mentah yang Dibutuhkan untuk 1 Unit</h4>
+                    <div id="bahan-mentah-list">
+                        </div>
+                    <button type="button" class="btn-add-bahan" onclick="tambahInputBahanMentah()">+ Tambah Bahan</button>
+                </div>
+
+                <button type="submit" class="btn btn-save-modal">Simpan Katalog</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || [];
+        let transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+        let categoryOrder = JSON.parse(localStorage.getItem('categoryOrder')) || [];
+
+        // Kategori eksklusif yang tidak boleh di-drag
+        const EXCLUSIVE_CATEGORIES = ['Bestseller', 'Promo'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            sinkronisasiStokDenganPenjualan();
+            tampilkanKatalog();
+            document.querySelector('.close-button').onclick = tutupModalProduk; // Listener Tutup Modal
+            
+            // Listener untuk update realtime dari halaman lain
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'daftarStok' || event.key === 'transaksiHistori') {
+                    // Muat ulang data dan refresh tampilan
+                    daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || [];
+                    transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+                    tampilkanKatalog();
+                    console.log('Katalog diperbarui dari perubahan di halaman lain.');
+                }
+            });
+        });
+
+        // --- FUNGSI UTILITY & PERHITUNGAN STOK (DITAMBAH UNTUK FIX BUG) ---
+
+        function formatRupiah(angka) {
+            if (isNaN(angka) || angka === null) return '0';
+            const num = Math.round(angka); 
+            let reverse = num.toString().split('').reverse().join(''),
+                ribuan = reverse.match(/\d{1,3}/g);
+            ribuan = ribuan.join('.').split('').reverse().join('');
+            return ribuan;
+        }
+        
+        function formatAngka(angka) {
+            if (isNaN(angka) || angka === null) return '0';
+            const num = parseFloat(angka);
+            return num.toLocaleString('id-ID', { maximumFractionDigits: 5 }); 
+        }
+
+        /**
+         * Menghitung stok produk jadi berdasarkan ketersediaan bahan mentah.
+         * @param {Object} produk - Objek produk yang sedang dihitung.
+         * @returns {number} Stok unit produk jadi yang bisa dibuat.
+         */
+        function hitungStokProdukJadi(produk) {
+            if (produk.isBahanMentah || !produk.bahanMentah || produk.bahanMentah.length === 0) {
+                return produk.stok || 0; // Untuk barang dagangan atau bahan mentah, kembalikan stok manual
+            }
+
+            let minStokProduksi = Infinity;
+
+            produk.bahanMentah.forEach(bahan => {
+                const bahanStok = daftarStok.find(p => p.nama === bahan.nama && p.isBahanMentah);
+                const stokTersedia = bahanStok ? bahanStok.stok : 0;
+                const jumlahDibutuhkan = bahan.kuantitas;
+                
+                if (jumlahDibutuhkan > 0) {
+                    const unitBisaDibuat = Math.floor(stokTersedia / jumlahDibutuhkan);
+                    if (unitBisaDibuat < minStokProduksi) {
+                        minStokProduksi = unitBisaDibuat;
+                    }
+                }
+            });
+
+            return minStokProduksi === Infinity ? 0 : minStokProduksi;
+        }
+
+        function hitungHargaModalProdukJadi(produk) {
+            // Jika produk adalah PROMO, cari modal dari produk aslinya
+            const isPromoItem = produk.isPromo;
+            let modalSource = produk;
+
+            if (isPromoItem) {
+                const originalProduct = daftarStok.find(p => p.nama === produk.originalName && !p.isBahanMentah && !p.isPromo);
+                if (originalProduct) {
+                    modalSource = originalProduct;
+                } else {
+                    return produk.hargaBeli || 0;
+                }
+            }
+            
+            let totalHargaModal = 0;
+            if (modalSource.bahanMentah && modalSource.bahanMentah.length > 0) {
+                modalSource.bahanMentah.forEach(bahan => {
+                    const bahanStok = daftarStok.find(p => p.nama === bahan.nama && p.isBahanMentah);
+                    const hargaModalBahan = bahanStok ? (bahanStok.hargaBeli || 0) : 0;
+                    totalHargaModal += (hargaModalBahan * bahan.kuantitas);
+                });
+            } else {
+                return modalSource.hargaBeli || 0; 
+            }
+            return totalHargaModal;
+        }
+
+        function hitungTopProduk() {
+            const penjualan = {};
+            // Ambil data 30 hari terakhir untuk Bestseller yang lebih akurat
+            const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+            const oneMonthAgo = Date.now() - ONE_MONTH;
+
+            transaksiHistori.forEach(transaksi => {
+                // Pastikan transaksi memiliki properti 'tanggal'
+                if (!transaksi.tanggal) return; 
+
+                const transactionDate = new Date(transaksi.tanggal).getTime();
+                if (transactionDate >= oneMonthAgo) {
+                    transaksi.items.forEach(item => {
+                        const namaProduk = item.produk;
+                        penjualan[namaProduk] = (penjualan[namaProduk] || 0) + item.kuantitas;
+                    });
+                }
+            });
+
+            const sortedPenjualan = Object.entries(penjualan)
+                .map(([nama, total]) => ({ nama, total }))
+                .sort((a, b) => b.total - a.total);
+            
+            // Filter hanya produk jadi (bukan bahan mentah dan bukan item promo itu sendiri)
+            const topProducts = sortedPenjualan
+                .filter(item => daftarStok.some(p => p.nama === item.nama && !p.isBahanMentah && !p.isPromo))
+                .slice(0, 3);
+                
+            // MENGEMBALIKAN NAMA DAN JUMLAH TOTAL PENJUALAN
+            return topProducts; // Mengembalikan array of {nama, total}
+        }
+        
+        function sinkronisasiStokDenganPenjualan() {
+            // Logika inisialisasi properti produk
+             let isChanged = false;
+             daftarStok = daftarStok.map(p => {
+                if (!p.isBahanMentah) {
+                    if (typeof p.hargaJual === 'undefined') { p.hargaJual = 0; isChanged = true; } 
+                    if (typeof p.hargaBeli === 'undefined') { p.hargaBeli = 0; isChanged = true; }
+                    if (typeof p.kategori === 'undefined') { p.kategori = 'Lain-lain'; isChanged = true; }
+                    if (typeof p.targetStokMinimal === 'undefined') { p.targetStokMinimal = 10; isChanged = true; }
+                    if (typeof p.stok === 'undefined') { p.stok = 0; isChanged = true; }
+                }
+                return p;
+            });
+            // Update localStorage jika ada perubahan inisialisasi
+            if (isChanged) {
+                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+            }
+        }
+
+        // --- LOGIKA UTAMA RENDER KATALOG (DIPERBAIKI) ---
+
+        function tampilkanKatalog() {
+            // Ambil data terbaru dari localStorage saat merender
+            daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || []; 
+            transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+
+            let produkJadi = daftarStok.filter(p => !p.isBahanMentah && !p.isPromo);
+            let produkPromo = daftarStok.filter(p => p.isPromo);
+            const container = document.getElementById('katalog-list-container');
+            container.innerHTML = '';
+            
+            // 1. Kelompokkan Produk Standar
+            const groupedProducts = produkJadi.reduce((acc, produk) => {
+                const category = produk.kategori?.trim() || 'Lain-lain';
+                if (!acc[category]) { acc[category] = []; }
+                acc[category].push(produk);
+                return acc;
+            }, {});
+            
+            const standardCategories = Object.keys(groupedProducts);
+
+            // 2. Perbarui Urutan Kategori
+            const topBestsellersData = hitungTopProduk(); // Mengembalikan {nama, total}
+            
+            // Filter kategori yang sudah tidak ada
+            categoryOrder = categoryOrder.filter(cat => EXCLUSIVE_CATEGORIES.includes(cat) || standardCategories.includes(cat));
+            
+            // Tambahkan kategori standar baru
+            standardCategories.forEach(cat => {
+                if (!categoryOrder.includes(cat)) { categoryOrder.push(cat); }
+            });
+
+            // Pastikan kategori eksklusif di awal (atau sesuai keinginan)
+            if (!categoryOrder.includes('Bestseller')) categoryOrder.unshift('Bestseller');
+            if (!categoryOrder.includes('Promo')) {
+                 const bestSellerIndex = categoryOrder.indexOf('Bestseller');
+                 categoryOrder.splice(bestSellerIndex !== -1 ? bestSellerIndex + 1 : 0, 0, 'Promo');
+            }
+            
+            localStorage.setItem('categoryOrder', JSON.stringify(categoryOrder));
+            
+            // 3. Render Semua Kategori Berdasarkan Urutan
+            categoryOrder.forEach(category => {
+                let productsToRender = [];
+                let isExclusive = false;
+                let className = '';
+                let isDraggable = true;
+                const bestsellerSalesMap = new Map(); // Map untuk menyimpan total penjualan Bestseller
+
+                if (category === 'Bestseller') {
+                    // AMBIL DATA PRODUK DARI DATA BESTSELLER YANG SUDAH DIHITUNG
+                    productsToRender = topBestsellersData.map(item => {
+                        const product = daftarStok.find(p => p.nama === item.nama && !p.isBahanMentah && !p.isPromo);
+                        if (product) {
+                           // SIMPAN TOTAL PENJUALAN KE MAP
+                           bestsellerSalesMap.set(item.nama, item.total); 
+                        }
+                        return product;
+                    }).filter(p => p);
+                    
+                    isExclusive = true;
+                    className = 'bestseller';
+                    isDraggable = false;
+                } else if (category === 'Promo') {
+                    productsToRender = produkPromo;
+                    isExclusive = true;
+                    className = 'promo';
+                    isDraggable = false;
+                } else {
+                    productsToRender = groupedProducts[category] || [];
+                }
+                
+                if (productsToRender.length === 0 && !isExclusive) return;
+
+                const categorySection = document.createElement('div');
+                categorySection.className = `category-section ${className}`;
+                categorySection.setAttribute('data-category', category);
+                categorySection.setAttribute('draggable', isDraggable ? 'true' : 'false'); 
+                
+                let productsHtml = '';
+                productsToRender.forEach(produk => {
+                    
+                    // --- KODE PENTING YANG DIPERBAIKI (PENGAMBILAN STOK) ---
+                    let produkStokSource = produk; 
+                    let originalName = produk.nama;
+                    
+                    if (produk.isPromo) {
+                        originalName = produk.originalName;
+                        // Untuk promo, hitung stok berdasarkan produk aslinya
+                        produkStokSource = daftarStok.find(p => p.nama === originalName && !p.isBahanMentah);
+                    } else if (category === 'Bestseller') {
+                        // Untuk bestseller, hitung stok berdasarkan produk aslinya
+                        produkStokSource = daftarStok.find(p => p.nama === produk.nama && !p.isBahanMentah);
+                    }
+                    
+                    // HITUNG STOK MENGGUNAKAN FUNGSI BARU/FIX
+                    const stok = produkStokSource ? hitungStokProdukJadi(produkStokSource) : 0;
+                    // --- AKHIR KODE PENTING YANG DIPERBAIKI ---
+
+                    const hargaModal = hitungHargaModalProdukJadi(produk);
+                    const hargaJual = produk.hargaJual || 0;
+                    const keuntungan = hargaJual - hargaModal;
+                    const isPromo = produk.isPromo;
+
+                    // TAMBAHAN: Dapatkan Total Penjualan untuk Bestseller
+                    let totalTerjualHtml = '';
+                    if (category === 'Bestseller') {
+                        const totalTerjual = bestsellerSalesMap.get(produk.nama) || 0;
+                        if (totalTerjual > 0) {
+                             totalTerjualHtml = `<div class="stock-info" style="color: #d4a72d; font-weight: 700;">
+                                                 Terjual (30 hari): <strong>${formatAngka(totalTerjual)}</strong> unit
+                                                 </div>`;
+                        }
+                    }
+
+                    
+                    // Detail Resep (gunakan produkStokSource jika ada, untuk Promo/Bestseller)
+                    let produkResep = produkStokSource || produk;
+                    
+                    let resepHtml = '<h4>Resep (Bahan/Unit):</h4>';
+                    if (produkResep.bahanMentah && produkResep.bahanMentah.length > 0) {
+                        resepHtml += '<ul class="recipe-list">';
+                        produkResep.bahanMentah.forEach(bahan => {
+                            resepHtml += `<li><strong>${formatAngka(bahan.kuantitas)}</strong> unit ${bahan.nama}</li>`;
+                        });
+                        resepHtml += '</ul>';
+                    } else {
+                         resepHtml += `<p class="recipe-list" style="margin-bottom: 0;">${hargaModal > 0 ? '(Barang Dagangan/Modal Manual)' : '(Belum ada resep)'}</p>`;
+                    }
+                    
+                    let actionButton = '';
+                    if (isPromo) {
+                        actionButton = `<button class="btn" style="background-color: var(--primary-color); padding: 8px 12px;" onclick="tampilkanModalProduk('edit', true, '${produk.nama}')"><i class="fas fa-tags"></i> Edit Promo</button>
+                                        <button class="btn btn-delete" style="padding: 8px 12px; background-color: var(--danger-color);" onclick="hapusProdukPromo('${produk.nama}')"><i class="fas fa-trash"></i> Hapus Promo</button>`;
+                    } else {
+                        actionButton = `<button class="btn" style="background-color: var(--info-color); padding: 8px 12px;" onclick="tampilkanModalProduk('edit', false, '${produk.nama}')"><i class="fas fa-edit"></i> Edit</button>
+                                        <button class="btn btn-delete" style="padding: 8px 12px; background-color: var(--danger-color);" onclick="hapusProduk('${produk.nama}')"><i class="fas fa-trash"></i> Hapus</button>`;
+                    }
+                    
+                    productsHtml += `
+                        <div class="product-card" data-name="${produk.nama}">
+                            <div class="product-name">${originalName} ${isPromo ? '(PROMO)' : ''}</div>
+                            <div class="price-info">
+                                <span class="harga-jual">Harga Jual: Rp ${formatRupiah(hargaJual)}</span>
+                                <span class="harga-pokok">Modal Pokok: Rp ${formatRupiah(hargaModal)}</span>
+                                <span class="keuntungan-bersih"><i class="fas fa-chart-line"></i> Keuntungan Bersih: Rp ${formatRupiah(keuntungan)}</span>
+                            </div>
+                            <div class="stock-info">Stok Tersedia: <strong>${formatAngka(stok)}</strong> unit</div>
+                            ${totalTerjualHtml} <div class="recipe-info">
+                                ${resepHtml}
+                            </div>
+                            <div class="card-actions">
+                                ${actionButton}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                categorySection.innerHTML = `
+                    <div class="category-header">
+                        <h3>${category}</h3>
+                        ${isDraggable ? `<i class="fas fa-grip-vertical drag-handle" title="Seret untuk mengubah urutan"></i>` : ''}
+                    </div>
+                    <div class="product-grid">
+                        ${productsHtml}
+                    </div>
+                `;
+
+                container.appendChild(categorySection);
+            });
+            
+            initializeDragAndDrop(); 
+        }
+
+        // --- LOGIKA DRAG-AND-DROP ---
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            const category = this.getAttribute('data-category');
+            if (EXCLUSIVE_CATEGORIES.includes(category)) {
+                e.preventDefault(); 
+                return;
+            }
+            draggedItem = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', category);
+            this.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            const category = this.getAttribute('data-category');
+            if (EXCLUSIVE_CATEGORIES.includes(category)) return; 
+
+            if (this !== draggedItem) {
+                const rect = this.getBoundingClientRect();
+                const next = (e.clientY - rect.top) / rect.height > 0.5;
+                const container = document.getElementById('katalog-list-container');
+                container.insertBefore(draggedItem, next ? this.nextSibling : this);
+            }
+        }
+
+        function handleDrop(e) { e.stopPropagation(); }
+        
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            
+            const listContainer = document.getElementById('katalog-list-container');
+            
+            const newOrder = Array.from(listContainer.querySelectorAll('.category-section')).map(sec => sec.getAttribute('data-category'));
+            categoryOrder = newOrder;
+            localStorage.setItem('categoryOrder', JSON.stringify(categoryOrder));
+        }
+
+        function initializeDragAndDrop() {
+            const listContainer = document.getElementById('katalog-list-container');
+            const sections = listContainer.querySelectorAll('.category-section');
+            
+            sections.forEach(section => {
+                section.removeEventListener('dragstart', handleDragStart); // Hapus listener lama
+                section.removeEventListener('dragover', handleDragOver);
+                section.removeEventListener('drop', handleDrop);
+                section.removeEventListener('dragend', handleDragEnd);
+                
+                if (section.getAttribute('draggable') === 'true') {
+                    section.addEventListener('dragstart', handleDragStart);
+                    section.addEventListener('dragover', handleDragOver);
+                    section.addEventListener('drop', handleDrop);
+                    section.addEventListener('dragend', handleDragEnd);
+                }
+            });
+        }
+        
+        // --- LOGIKA MODAL INPUT BARU & PROMO ---
+
+        function tampilkanModalProduk(mode, isPromo = false, namaProduk = null) {
+            // Ambil data terbaru sebelum membuka modal
+            daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || []; 
+
+            const modal = document.getElementById('katalogModal');
+            const form = document.getElementById('form-katalog');
+            const title = document.getElementById('modal-title');
+            const productNameSelect = document.getElementById('product-name-select'); 
+            const categoryInput = document.getElementById('product-category');
+            const categoryGroup = document.getElementById('modal-kategori-group');
+            const productPriceInput = document.getElementById('product-price');
+            const priceLabel = document.getElementById('price-label');
+            const originalPriceGroup = document.getElementById('original-price-group');
+            const originalPriceDisplay = document.getElementById('original-price-display');
+            const bahanMentahGroup = document.getElementById('bahan-mentah-group');
+            const bahanMentahList = document.getElementById('bahan-mentah-list');
+
+            form.reset();
+            bahanMentahList.innerHTML = '';
+            
+            // 1. Set mode dan status promo di hidden input
+            document.getElementById('product-mode').value = mode;
+            document.getElementById('is-promo-mode').value = isPromo;
+            document.getElementById('product-original-name').value = ''; 
+
+            // 2. Sembunyikan/Reset semua elemen yang opsional
+            categoryGroup.style.display = 'none';
+            bahanMentahGroup.style.display = 'none';
+            originalPriceGroup.style.display = 'none';
+            productNameSelect.disabled = false;
+            priceLabel.classList.remove('price-label-promo');
+            
+            // 3. Atur ulang semua atribut 'required' default (Sangat penting untuk fix bug)
+            productNameSelect.setAttribute('required', 'required');
+            categoryInput.setAttribute('required', 'required'); 
+            productPriceInput.setAttribute('required', 'required');
+            
+            // Hapus listener lama
+            productNameSelect.onchange = null;
+
+            if (mode === 'add') {
+                title.textContent = isPromo ? "Tambah Produk Promo Baru" : "Tambah Produk Baru ke Katalog";
+                
+                let availableProducts = [];
+                if (!isPromo) {
+                    // MODE ADD REGULAR
+                    // Produk yang bisa ditambahkan adalah yang ada di Stok tapi belum punya properti kategori (belum di katalog)
+                    availableProducts = daftarStok.filter(p => !p.isBahanMentah && !p.isPromo && typeof p.kategori === 'undefined');
+                    
+                    categoryGroup.style.display = 'block';
+                    bahanMentahGroup.style.display = 'block';
+                    priceLabel.textContent = 'Harga Jual (Rp):';
+                    
+                } else {
+                    // MODE ADD PROMO
+                    const existingPromoNames = daftarStok.filter(p => p.isPromo).map(p => p.originalName);
+                    availableProducts = daftarStok.filter(p => !p.isBahanMentah && !p.isPromo && !existingPromoNames.includes(p.nama));
+
+                    originalPriceGroup.style.display = 'block';
+                    priceLabel.textContent = 'Harga Jual Promo (Rp):';
+                    priceLabel.classList.add('price-label-promo');
+                    
+                    // HILANGKAN REQUIRED untuk elemen yang tersembunyi di mode PROMO 
+                    categoryInput.removeAttribute('required');
+                }
+                
+                if (availableProducts.length === 0) {
+                    productNameSelect.innerHTML = `<option value="" disabled selected>${isPromo ? 'Semua produk sudah ada promo' : 'Semua produk sudah ada di katalog'}</option>`;
+                    productNameSelect.disabled = true;
+                    productNameSelect.removeAttribute('required'); // Tidak perlu required jika disabled
+                    productPriceInput.removeAttribute('required');
+                } else {
+                    productNameSelect.innerHTML = `<option value="" disabled selected>Pilih Produk</option>` + 
+                                                  availableProducts.map(p => `<option value="${p.nama}" data-price="${p.hargaJual || 0}">${p.nama}</option>`).join('');
+                }
+
+                if (isPromo) {
+                    productNameSelect.onchange = function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const price = parseFloat(selectedOption.getAttribute('data-price') || 0);
+                        originalPriceDisplay.textContent = `Rp ${formatRupiah(price)}`;
+                    };
+                    originalPriceDisplay.textContent = 'Rp 0';
+                }
+
+            } else if (mode === 'edit' && namaProduk) {
+                const produk = daftarStok.find(p => p.nama === namaProduk);
+                if (!produk) { tutupModalProduk(); return; }
+
+                productNameSelect.disabled = true;
+
+                if (isPromo) {
+                    // MODE EDIT PROMO
+                    title.textContent = "Edit Produk Promo";
+                    const displayNama = produk.originalName;
+                    
+                    productNameSelect.innerHTML = `<option value="${produk.nama}" selected>${displayNama}</option>`;
+                    document.getElementById('product-original-name').value = produk.originalName;
+                    productPriceInput.value = produk.hargaJual;
+                    originalPriceGroup.style.display = 'block';
+                    priceLabel.textContent = 'Harga Jual Promo (Rp):';
+                    priceLabel.classList.add('price-label-promo');
+                    
+                    const originalProduct = daftarStok.find(p => p.nama === produk.originalName && !p.isBahanMentah);
+                    originalPriceDisplay.textContent = `Rp ${formatRupiah(originalProduct ? originalProduct.hargaJual : 0)}`;
+
+                    // HILANGKAN REQUIRED untuk elemen yang tersembunyi (FIX UTAMA)
+                    categoryInput.removeAttribute('required');
+                } else {
+                    // MODE EDIT REGULAR
+                    title.textContent = "Edit Produk Katalog";
+                    productNameSelect.innerHTML = `<option value="${produk.nama}" selected>${produk.nama}</option>`;
+
+                    categoryGroup.style.display = 'block';
+                    bahanMentahGroup.style.display = 'block';
+                    priceLabel.textContent = 'Harga Jual (Rp):';
+
+                    categoryInput.value = produk.kategori || '';
+                    productPriceInput.value = produk.hargaJual;
+                    
+                    // Gunakan produkStokSource untuk mendapatkan resep yang benar (jika ada)
+                    const produkResepSource = daftarStok.find(p => p.nama === produk.nama && !p.isBahanMentah) || produk;
+
+                    if (produkResepSource.bahanMentah) {
+                        produkResepSource.bahanMentah.forEach(bahan => {
+                            tambahInputBahanMentah(bahan.nama, bahan.kuantitas);
+                        });
+                    }
+                }
+            }
+            modal.style.display = 'flex';
+        }
+
+
+        function tutupModalProduk() {
+            document.getElementById('katalogModal').style.display = 'none';
+        }
+        
+        function tambahInputBahanMentah(nama = '', kuantitas = '') {
+            const bahanMentahList = document.getElementById('bahan-mentah-list');
+            const newDiv = document.createElement('div');
+            newDiv.className = 'bahan-mentah-item';
+            
+            const bahanOptions = daftarStok.filter(p => p.isBahanMentah).sort((a, b) => a.nama.localeCompare(b.nama));
+            
+            // Tambahkan atribut name pada select dan input
+            let selectHtml = `<select class="nama-bahan-mentah" name="nama-bahan-mentah[]" required><option value="">Pilih Bahan</option>`;
+            selectHtml += bahanOptions.map(b => `<option value="${b.nama}" ${b.nama === nama ? 'selected' : ''}>${b.nama}</option>`).join('');
+            selectHtml += `</select>`;
+            
+            const kuantitasTersimpan = kuantitas ? formatAngka(kuantitas) : ''; 
+
+            newDiv.innerHTML = `
+                ${selectHtml}
+                <input type="number" name="kuantitas-bahan-mentah[]" placeholder="Kuantitas (Cth: 0.005)" class="kuantitas-bahan-mentah" min="0.00001" step="any" value="${kuantitasTersimpan}" required>
+                <button type="button" onclick="this.parentNode.remove()"><i class="fas fa-trash"></i></button>
+            `;
+            bahanMentahList.appendChild(newDiv);
+        }
+
+        // EVENT LISTENER SUBMIT FORM (LOGIC DIPERKUAT)
+        document.getElementById('form-katalog').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const mode = document.getElementById('product-mode').value;
+            const isPromo = document.getElementById('is-promo-mode').value === 'true';
+
+            // Ambil Nama Produk dari Select
+            let namaProdukElement = document.getElementById('product-name-select');
+            let selectedOption = namaProdukElement.options[namaProdukElement.selectedIndex];
+            let nama = namaProdukElement.value.trim();
+
+            if (isPromo) {
+                const originalName = document.getElementById('product-original-name').value || selectedOption.value; 
+                const promoPrice = parseFloat(document.getElementById('product-price').value);
+                const uniquePromoName = `PROMO_${originalName}`;
+                
+                if (!originalName || promoPrice <= 0 || isNaN(promoPrice)) { 
+                     alert("Pilih produk dan masukkan harga promo yang valid."); 
+                     return; 
+                }
+                
+                const existingPromoIndex = daftarStok.findIndex(p => p.nama === uniquePromoName && p.isPromo);
+                
+                if (existingPromoIndex !== -1) {
+                    daftarStok[existingPromoIndex].hargaJual = promoPrice;
+                    alert(`Harga promo untuk '${originalName}' berhasil diperbarui.`);
+                } else {
+                    // Cek duplikasi untuk memastikan tidak ada promo lain yang terlewat
+                    if (daftarStok.some(p => p.originalName === originalName && p.isPromo)) {
+                         alert(`Produk '${originalName}' sudah memiliki promo. Silakan edit atau hapus promo yang sudah ada.`);
+                         return;
+                    }
+                    
+                    const newPromo = {
+                        nama: uniquePromoName, 
+                        originalName: originalName, 
+                        kategori: 'Promo',
+                        stok: 0, 
+                        hargaJual: promoPrice,
+                        hargaBeli: 0, 
+                        isBahanMentah: false,
+                        isPromo: true
+                    };
+                    daftarStok.push(newPromo);
+                    alert(`Produk '${originalName}' berhasil ditambahkan ke kategori Promo.`);
+                }
+            } else {
+                // Logika Produk Regular
+                const kategori = document.getElementById('product-category').value.trim();
+                const harga = parseFloat(document.getElementById('product-price').value);
+                
+                if (!nama || harga <= 0 || isNaN(harga)) { 
+                    alert("Pilih produk dan masukkan harga jual yang valid."); 
+                    return; 
+                }
+                
+                const bahanMentah = [];
+                let isRecipeValid = true;
+                document.querySelectorAll('#bahan-mentah-list .bahan-mentah-item').forEach(item => {
+                    const namaBahan = item.querySelector('.nama-bahan-mentah').value;
+                    const kuantitasBahan = parseFloat(item.querySelector('.kuantitas-bahan-mentah').value);
+                    // Cek validasi resep
+                    if (namaBahan && kuantitasBahan > 0) {
+                        bahanMentah.push({ nama: namaBahan, kuantitas: kuantitasBahan });
+                    } else if ((namaBahan && kuantitasBahan <= 0) || (!namaBahan && kuantitasBahan > 0)) {
+                         isRecipeValid = false;
+                    }
+                });
+                if (!isRecipeValid) { alert("Resep tidak lengkap. Pastikan setiap kuantitas memiliki nama bahan yang dipilih dan kuantitas lebih dari nol."); return; }
+
+                const existingProductIndex = daftarStok.findIndex(p => p.nama.toLowerCase() === nama.toLowerCase() && !p.isPromo);
+
+                if (existingProductIndex !== -1) {
+                    // Edit Produk (Sudah ada di daftarStok)
+                    const existingProduct = daftarStok[existingProductIndex];
+                    existingProduct.kategori = kategori;
+                    existingProduct.hargaJual = harga;
+                    existingProduct.bahanMentah = bahanMentah;
+                    
+                    if (bahanMentah.length === 0 && existingProduct.isBahanMentah === false) { 
+                        const hargaModalInput = prompt(`Produk '${nama}' adalah barang dagangan/non-produksi. Masukkan Harga Modal/Beli per Unit untuk koreksi (Contoh: 5000):`, existingProduct.hargaBeli || 0);
+                        existingProduct.hargaBeli = (hargaModalInput === null || isNaN(parseFloat(hargaModalInput)) || parseFloat(hargaModalInput) < 0) ? existingProduct.hargaBeli : parseFloat(hargaModalInput);
+                    }
+                    
+                    alert(`Produk '${nama}' berhasil diperbarui.`);
+                } else {
+                    // Tambah Produk (dari list produk yang belum di katalog)
+                    const existingStok = daftarStok.find(p => p.nama === nama && !p.isBahanMentah);
+                    
+                    if (!existingStok) { alert("Produk tidak ditemukan di Stok."); return; }
+                    
+                    // Copy data stok awal, lalu tambahkan properti katalog
+                    const newProduct = JSON.parse(JSON.stringify(existingStok));
+                    newProduct.kategori = kategori;
+                    newProduct.hargaJual = harga;
+                    newProduct.bahanMentah = bahanMentah; 
+
+                    if (bahanMentah.length === 0) {
+                         const hargaModalInput = prompt(`Produk '${nama}' adalah barang dagangan/non-produksi. Masukkan Harga Modal/Beli per Unit (Contoh: 5000):`, newProduct.hargaBeli || 0);
+                         newProduct.hargaBeli = (hargaModalInput === null || isNaN(parseFloat(hargaModalInput)) || parseFloat(hargaModalInput) < 0) ? (newProduct.hargaBeli || 0) : parseFloat(hargaModalInput);
+                    }
+                    
+                    // Ganti produk lama dengan yang sudah ditambahkan properti katalog
+                    daftarStok = daftarStok.filter(p => p.nama !== nama || p.isBahanMentah || p.isPromo);
+                    daftarStok.push(newProduct);
+                    
+                    alert(`Produk baru '${nama}' berhasil ditambahkan ke katalog.`);
+                }
+            }
+            
+            localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+            tampilkanKatalog();
+            tutupModalProduk();
+        });
+
+
+        function hapusProduk(namaProduk) {
+             if (confirm(`Apakah Anda yakin ingin menghapus produk '${namaProduk}' dari katalog? Produk promo terkait juga akan dihapus. (Stok produk tetap ada)`)) {
+                const index = daftarStok.findIndex(p => p.nama === namaProduk && !p.isPromo);
+                if (index !== -1) {
+                    const kategoriProduk = daftarStok[index].kategori;
+                    
+                    // Hapus properti katalog dari produk, tapi biarkan objek produk tetap ada di daftarStok 
+                    const produk = daftarStok[index];
+                    delete produk.kategori;
+                    delete produk.hargaJual;
+                    // Hapus semua promo yang terkait dengan produk ini
+                    daftarStok = daftarStok.filter(p => p.nama !== `PROMO_${namaProduk}`);
+                    
+                    // Cek apakah kategori perlu dihapus dari urutan
+                    const sisaProdukKategori = daftarStok.filter(p => p.kategori === kategoriProduk && !p.isPromo).length;
+                    if (sisaProdukKategori === 0 && !EXCLUSIVE_CATEGORIES.includes(kategoriProduk)) {
+                        categoryOrder = categoryOrder.filter(c => c !== kategoriProduk);
+                        localStorage.setItem('categoryOrder', JSON.stringify(categoryOrder));
+                    }
+                    
+                    localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                    tampilkanKatalog();
+                    alert("Produk berhasil dihapus dari katalog (properti kategori dan harga jual dihapus).");
+                }
+            }
+        }
+        
+        function hapusProdukPromo(namaPromo) {
+            if (confirm(`Apakah Anda yakin ingin menghapus produk promo '${namaPromo.replace('PROMO_', '')}'? Produk aslinya TIDAK akan terhapus.`)) {
+                daftarStok = daftarStok.filter(p => p.nama !== namaPromo || !p.isPromo);
+                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                tampilkanKatalog();
+                alert("Produk promo berhasil dihapus.");
+            }
+        }
+        
+        // --- LOGIKA IMPORT/EXPORT (Placeholder) ---
+        function exportKatalog() {
+            alert("Fitur Export belum diimplementasikan.");
+        }
+
+        function importKatalog(event) {
+            alert("Fitur Import belum diimplementasikan.");
+        }
+    </script>
+</body>
+</html>

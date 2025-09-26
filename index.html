@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Utama | Aplikasi Bisnis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Palet Warna dan Tipografi yang Diperbarui */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            /* Warna Baru (Lebih netral dan modern) */
+            --primary-color: #007BFF; /* Biru/Navy yang berwibawa */
+            --primary-dark: #0056b3;
+            --background-light: #f4f6f9; /* Background lebih abu-abu muda */
+            --card-background: #ffffff;
+            --text-color: #34495e; /* Text lebih gelap */
+            --light-text: #6c757d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --border-color: #e9ecef;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            text-align: center;
+            max-width: 960px; /* Lebar lebih besar */
+            width: 100%;
+        }
+
+        /* Judul */
+        h1 {
+            color: var(--primary-dark);
+            font-weight: 700;
+            margin-bottom: 50px;
+            font-size: 2.8em;
+            letter-spacing: 0.5px;
+            border-bottom: 3px solid var(--primary-color);
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        /* Grid Tombol */
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Ukuran kartu diperbesar */
+            gap: 25px;
+        }
+
+        .dashboard-button {
+            /* Reset dan Tampilan Dasar */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 16px; /* Sudut lebih melengkung */
+            padding: 30px;
+            text-decoration: none;
+            color: var(--text-color);
+            
+            /* Shadow yang lebih halus (Premium look) */
+            box-shadow: 0 4px 20px var(--shadow-color);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .dashboard-button:hover {
+            transform: translateY(-8px); /* Efek angkat lebih jelas */
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border-color: var(--primary-color); /* Border muncul saat hover */
+        }
+
+        /* Ikon */
+        .dashboard-button i {
+            font-size: 3.5em; /* Ukuran ikon diperbesar */
+            color: var(--primary-color);
+            margin-bottom: 18px;
+        }
+
+        /* Teks Tombol */
+        .button-text {
+            font-weight: 600;
+            font-size: 1.2em;
+            text-align: center;
+            color: var(--primary-dark);
+        }
+
+        /* Penyesuaian Warna Ikon agar berbeda-beda (Opsional) */
+        .dashboard-button:nth-child(1) i { color: #28a745; } /* Cash Register - Hijau Penjualan */
+        .dashboard-button:nth-child(2) i { color: #fd7e14; } /* Chart Line - Oranye Kinerja */
+        .dashboard-button:nth-child(3) i { color: #17a2b8; } /* History - Biru Info */
+        .dashboard-button:nth-child(4) i { color: #6f42c1; } /* Katalog - Ungu Produk */
+        .dashboard-button:nth-child(5) i { color: #dc3545; } /* Warehouse - Merah Stok */
+        .dashboard-button:nth-child(6) i { color: #ffc107; } /* Finance - Kuning Keuangan */
+
+        /* Media Query untuk Mobile */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h1>Dashboard Utama</h1>
+        <div class="button-grid">
+            <a href="input-penjualan.html" class="dashboard-button">
+                <i class="fas fa-cash-register"></i>
+                <span class="button-text">Input Penjualan</span>
+            </a>
+            
+            <a href="penjualantoday.html" class="dashboard-button">
+                <i class="fas fa-chart-line"></i>
+                <span class="button-text">Penjualan Hari Ini</span>
+            </a>
+            
+            <a href="penjualan.html" class="dashboard-button">
+                <i class="fas fa-history"></i>
+                <span class="button-text">Data Penjualan</span>
+            </a>
+
+            <a href="katalog.html" class="dashboard-button">
+                <i class="fas fa-box-open"></i>
+                <span class="button-text">Katalog Produk</span>
+            </a>
+            
+            <a href="stok.html" class="dashboard-button">
+                <i class="fas fa-warehouse"></i>
+                <span class="button-text">Manajemen Stok</span>
+            </a>
+
+            <a href="finance.html" class="dashboard-button">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span class="button-text">Laporan Keuangan</span>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

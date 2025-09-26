@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Penjualan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* === WARNA & FONT SENADA DENGAN APLIKASI === */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #007bff; /* Biru */
+            --primary-dark: #0056b3;
+            --secondary-color: #28a745; /* Hijau */
+            --background-light: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #343a40;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* --- Header dan Judul --- */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header a {
+            font-size: 1.5em;
+            color: var(--primary-dark);
+            margin-right: 20px;
+            transition: color 0.3s;
+        }
+        .header a:hover {
+            color: var(--primary-color);
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            font-weight: 700;
+            font-size: 2.2em;
+            margin: 0;
+        }
+        
+        h2 {
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            font-size: 1.5em;
+        }
+
+        /* --- Filter dan Kontrol --- */
+        .filter-controls {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end; /* Memastikan tombol rata bawah */
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+            min-width: 120px;
+        }
+        
+        .filter-group input:focus, .filter-group select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        
+        .search-group {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        
+        #search-input {
+            width: 100%;
+        }
+
+        .btn-filter, .btn-search {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            min-width: 120px;
+            margin-top: 5px; /* Sesuaikan margin agar rata dengan input */
+        }
+
+        .btn-filter {
+            background-color: var(--primary-color);
+        }
+        .btn-filter:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .btn-search {
+            background-color: var(--secondary-color);
+        }
+        .btn-search:hover {
+            background-color: #1e7e34;
+            transform: translateY(-1px);
+        }
+
+        /* --- Kartu Ringkasan dan Top 10 --- */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Membagi menjadi dua kolom */
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .summary-card, .top-sellers-card {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-card {
+            border-left: 5px solid var(--primary-color); /* Aksen warna */
+        }
+
+        .summary-card .label {
+            font-weight: 500;
+            font-size: 1em;
+            color: #6c757d;
+        }
+
+        .summary-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-top: 5px;
+            color: var(--danger-color); /* Gunakan warna yang menonjol untuk nilai uang */
+        }
+
+        /* Gaya Top 10 */
+        .top-sellers-card {
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        .top-sellers-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .top-sellers-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .top-sellers-list li:last-child {
+            border-bottom: none;
+        }
+
+        .product-name {
+            font-weight: 500;
+            color: var(--text-color);
+            font-size: 1em;
+            flex-grow: 1;
+        }
+        
+        .product-rank {
+            font-weight: 700;
+            color: var(--secondary-color);
+            background-color: #e8f5e9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 15px;
+            font-size: 0.8em;
+        }
+
+        .product-quantity {
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: 1em;
+        }
+
+        /* --- Tabel Data --- */
+        .data-table-container {
+            background-color: var(--card-background);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate; /* Ubah ke separate untuk border radius */
+            border-spacing: 0;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--background-light);
+            color: var(--primary-dark);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Gaya Tombol Aksi Tabel */
+        .btn-detail {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--info-color);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 0.9em;
+        }
+        .btn-detail:hover {
+            background-color: #138496;
+        }
+
+        /* Responsif */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            .header {
+                margin-bottom: 20px;
+            }
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .btn-filter, .btn-search {
+                width: 100%;
+                min-width: auto;
+            }
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .summary-card .value {
+                font-size: 2em;
+            }
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <a href="index.html" title="Kembali ke Dashboard"><i class="fas fa-arrow-left"></i></a>
+            <h1><i class="fas fa-chart-line"></i> Riwayat Penjualan</h1>
+        </div>
+        
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="filter-type">Filter Berdasarkan:</label>
+                <select id="filter-type" onchange="toggleFilterFields()">
+                    <option value="all">Semua Data</option>
+                    <option value="daily">Harian</option>
+                    <option value="weekly">Mingguan</option>
+                    <option value="monthly">Bulanan</option>
+                    <option value="yearly">Tahunan</option>
+                </select>
+            </div>
+            <div class="filter-group" id="date-input-group" style="display: none;">
+                <label for="filter-date">Pilih Tanggal:</label>
+                <input type="date" id="filter-date">
+            </div>
+            <div class="filter-group" id="month-input-group" style="display: none;">
+                <label for="filter-month">Pilih Bulan:</label>
+                <input type="month" id="filter-month">
+            </div>
+            <div class="filter-group" id="year-input-group" style="display: none;">
+                <label for="filter-year">Pilih Tahun:</label>
+                <input type="number" id="filter-year" placeholder="Tahun" min="2000">
+            </div>
+            <button class="btn-filter" onclick="filterData()"><i class="fas fa-filter"></i> Terapkan Filter</button>
+            
+            <div class="filter-group search-group">
+                <label for="search-input">Cari Transaksi:</label>
+                <input type="text" id="search-input" placeholder="Cari ID atau nama produk">
+            </div>
+            <button class="btn-search" onclick="searchData()"><i class="fas fa-search"></i> Cari</button>
+        </div>
+        
+        <div class="analytics-grid">
+            <div class="summary-card">
+                <div class="label" id="summary-label">Total Penjualan (Semua Data)</div>
+                <div class="value" id="total-penjualan">Rp 0</div>
+            </div>
+            
+            <div class="top-sellers-card">
+                <h2><i class="fas fa-trophy"></i> Top 10 Produk Bestseller</h2>
+                <ul class="top-sellers-list" id="top-sellers-list">
+                    <li>Tidak ada data penjualan.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="data-table-container">
+            <h2><i class="fas fa-table"></i> Detail Transaksi</h2>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Transaksi</th>
+                            <th>Tanggal</th>
+                            <th>Total Penjualan</th>
+                            <th>Laba Kotor</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            filterData(); // Muat semua data saat halaman pertama kali dibuka
+        });
+
+        function formatRupiah(angka) {
+            if (angka === undefined || angka === null || isNaN(angka)) return 'Rp 0';
+            const num = Math.round(angka); 
+            let reverse = num.toString().split('').reverse().join(''),
+            ribuan = reverse.match(/\d{1,3}/g);
+            ribuan = ribuan.join('.').split('').reverse().join('');
+            return 'Rp ' + ribuan;
+        }
+        
+        function toggleFilterFields() {
+            const filterType = document.getElementById('filter-type').value;
+            // Sembunyikan semua input terlebih dahulu
+            document.getElementById('date-input-group').style.display = 'none';
+            document.getElementById('month-input-group').style.display = 'none';
+            document.getElementById('year-input-group').style.display = 'none';
+
+            // Tampilkan input yang relevan
+            if (filterType === 'daily') {
+                document.getElementById('date-input-group').style.display = 'flex';
+            } else if (filterType === 'monthly') {
+                document.getElementById('month-input-group').style.display = 'flex';
+            } else if (filterType === 'yearly') {
+                document.getElementById('year-input-group').style.display = 'flex';
+            }
+            // FilterData dipanggil setelah tombol filter diklik, bukan di sini
+        }
+
+        function filterData() {
+            const transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+            const filterType = document.getElementById('filter-type').value;
+            let filteredData = [];
+
+            const summaryLabel = document.getElementById('summary-label');
+
+            if (filterType === 'daily') {
+                const filterDate = document.getElementById('filter-date').value;
+                if (!filterDate) {
+                    alert('Harap pilih tanggal.');
+                    return;
+                }
+                filteredData = transaksiHistori.filter(t => t.tanggal === filterDate);
+                summaryLabel.textContent = `Total Penjualan Tanggal ${new Date(filterDate).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+            } else if (filterType === 'weekly') {
+                // Filter mingguan - PERHATIAN: LOGIKA SEDERHANA HANYA MEMPERINGATKAN
+                alert('Filter mingguan belum sepenuhnya diimplementasikan. Harap gunakan filter Harian, Bulanan, atau Tahunan.');
+                document.getElementById('filter-type').value = 'all';
+                filteredData = transaksiHistori;
+                summaryLabel.textContent = 'Total Penjualan (Semua Data)';
+            } else if (filterType === 'monthly') {
+                const filterMonth = document.getElementById('filter-month').value;
+                if (!filterMonth) {
+                    alert('Harap pilih bulan.');
+                    return;
+                }
+                filteredData = transaksiHistori.filter(t => t.tanggal.startsWith(filterMonth));
+                const [year, month] = filterMonth.split('-');
+                const monthName = new Date(year, month - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+                summaryLabel.textContent = `Total Penjualan Bulan ${monthName}`;
+            } else if (filterType === 'yearly') {
+                const filterYear = document.getElementById('filter-year').value;
+                if (!filterYear) {
+                    alert('Harap masukkan tahun.');
+                    return;
+                }
+                filteredData = transaksiHistori.filter(t => t.tanggal.startsWith(filterYear));
+                summaryLabel.textContent = `Total Penjualan Tahun ${filterYear}`;
+            } else { // 'all'
+                filteredData = transaksiHistori;
+                summaryLabel.textContent = 'Total Penjualan (Semua Data)';
+            }
+            
+            renderTable(filteredData);
+            calculateTopSellers(filteredData); // Panggil fungsi Top Sellers
+        }
+
+        function searchData() {
+            const transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            
+            if (searchQuery.length < 1) {
+                alert('Silakan masukkan kata kunci pencarian (ID atau nama produk).');
+                return;
+            }
+
+            const searchResults = transaksiHistori.filter(t => {
+                // 1. Cari berdasarkan ID Transaksi
+                if (t.id.toString().includes(searchQuery)) {
+                    return true;
+                }
+                // 2. Cari berdasarkan nama produk di dalam transaksi
+                const foundProduct = t.items.find(item => {
+                    const nama = item.namaDisplay || item.produk; 
+                    return nama.toLowerCase().includes(searchQuery);
+                });
+                return foundProduct;
+            });
+
+            document.getElementById('summary-label').textContent = `Hasil Pencarian untuk "${searchQuery}"`;
+            
+            renderTable(searchResults);
+            calculateTopSellers(searchResults); // Panggil fungsi Top Sellers
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('sales-table-body');
+            let totalPenjualan = 0;
+            let totalLabaKotor = 0;
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">Tidak ada data yang ditemukan.</td></tr>';
+                document.getElementById('total-penjualan').textContent = formatRupiah(0);
+                return;
+            }
+
+            data.forEach(transaksi => {
+                totalPenjualan += transaksi.total;
+                totalLabaKotor += (transaksi.labaKotor || 0);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${transaksi.id}</td>
+                    <td>${transaksi.tanggal}</td>
+                    <td>${formatRupiah(transaksi.total)}</td>
+                    <td>${formatRupiah(transaksi.labaKotor || 0)}</td>
+                    <td><button class="btn-detail" onclick="tampilkanDetail(${transaksi.id})"><i class="fas fa-eye"></i> Detail</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('total-penjualan').textContent = formatRupiah(totalPenjualan);
+        }
+        
+        // FUNGSI BARU UNTUK MENGHITUNG DAN MENAMPILKAN TOP 10
+        function calculateTopSellers(data) {
+            const productSales = {}; // { 'Nama Produk': Jumlah Kuantitas Terjual }
+
+            // 1. Agregasi Penjualan Produk dari Semua Transaksi yang Difilter
+            data.forEach(transaksi => {
+                transaksi.items.forEach(item => {
+                    // Gunakan namaDisplay jika ada, jika tidak, gunakan produk
+                    const productName = item.namaDisplay || item.produk;
+                    
+                    if (productSales[productName]) {
+                        productSales[productName] += item.kuantitas;
+                    } else {
+                        productSales[productName] = item.kuantitas;
+                    }
+                });
+            });
+
+            // 2. Konversi ke array dan sort (Urutkan)
+            const sortedSellers = Object.keys(productSales).map(name => ({
+                name: name,
+                quantity: productSales[name]
+            }))
+            .sort((a, b) => b.quantity - a.quantity) // Urutkan dari kuantitas terbanyak
+            .slice(0, 10); // Ambil hanya 10 teratas
+
+            // 3. Render ke HTML
+            const ul = document.getElementById('top-sellers-list');
+            ul.innerHTML = '';
+
+            if (sortedSellers.length === 0) {
+                ul.innerHTML = '<li>Tidak ada data produk bestseller.</li>';
+                return;
+            }
+
+            sortedSellers.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="product-rank">${index + 1}</span>
+                    <span class="product-name">${item.name}</span>
+                    <span class="product-quantity">${item.quantity} unit</span>
+                `;
+                ul.appendChild(li);
+            });
+        }
+        // AKHIR FUNGSI BARU
+
+        function tampilkanDetail(id) {
+            const transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+            const transaksi = transaksiHistori.find(t => t.id === id);
+
+            if (!transaksi) {
+                alert("Detail transaksi tidak ditemukan.");
+                return;
+            }
+
+            let detailText = `
+                =================================
+                DETAIL TRANSAKSI ID: ${transaksi.id}
+                Tanggal: ${transaksi.tanggal}
+                ---------------------------------
+                
+                ITEM PENJUALAN:
+            `;
+
+            transaksi.items.forEach(item => {
+                // Pastikan menggunakan namaDisplay jika ada (untuk item promo)
+                const nama = item.namaDisplay || item.produk; 
+                detailText += `
+                  - ${nama} 
+                    (${item.kuantitas} x ${formatRupiah(item.harga)}) = ${formatRupiah(item.total)}
+                `;
+            });
+            
+            detailText += `
+                ---------------------------------
+                Total Penjualan: ${formatRupiah(transaksi.total)}
+                Total Laba Kotor: ${formatRupiah(transaksi.labaKotor || 0)}
+                =================================
+            `;
+
+            alert(detailText);
+        }
+
+    </script>
+</body>
+</html>

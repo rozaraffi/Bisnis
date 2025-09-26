@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Stok</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* [STYLES TETAP SAMA SEPERTI ASLINYA] */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #007bff; 
+            --primary-dark: #0056b3;
+            --secondary-color: #28a745; 
+            --background-light: #f8f9fa; 
+            --card-background: #ffffff;
+            --text-color: #343a40;
+            --border-color: #e9ecef;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --success-color: #28a745;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header a {
+            font-size: 2em;
+            color: var(--primary-dark);
+            margin-right: 20px;
+            transition: color 0.3s;
+        }
+        .header a:hover {
+            color: var(--primary-color);
+        }
+
+        h1 {
+            color: var(--primary-dark);
+            font-weight: 700;
+            font-size: 2.2em;
+            margin: 0;
+        }
+
+        .data-table-container {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px var(--shadow-color);
+            margin-bottom: 30px;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .table-header h2 {
+            margin: 0;
+            color: var(--primary-dark);
+            font-size: 1.5em;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            color: white;
+            background-color: var(--primary-color);
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        .btn-secondary:hover {
+            background-color: #1e7e34;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 15px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        th {
+            background-color: var(--background-light);
+            color: var(--text-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .btn-edit {
+            background-color: #ffc107;
+            color: var(--text-color);
+        }
+        .btn-edit:hover {
+            background-color: #e0a800;
+        }
+        .btn-delete {
+            background-color: var(--danger-color);
+        }
+        .btn-delete:hover {
+            background-color: #bd2130;
+        }
+        .action-cell button {
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .status-badge {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-ok { color: var(--success-color); }
+        .status-warning { color: var(--warning-color); }
+        .status-danger { color: var(--danger-color); }
+        .recipe-info {
+            display: block;
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+            padding-left: 5px;
+            border-left: 3px solid var(--primary-color);
+        }
+        .saran-stok-container {
+            font-size: 0.9em;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        .saran-kurang {
+            background-color: #fff3cd; 
+            border: 1px solid var(--warning-color);
+            color: #856404;
+        }
+        .saran-cukup {
+            background-color: #d4edda; 
+            border: 1px solid var(--success-color);
+            color: #155724;
+        }
+        .saran-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+        }
+        .saran-list li {
+            margin-bottom: 3px;
+        }
+
+        .transaksi-header h2 {
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 5px;
+            color: var(--secondary-color);
+        }
+        .transaksi-cell-add {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        .transaksi-cell-cost {
+            color: var(--primary-dark);
+            display: flex; /* Untuk menempatkan tombol Hapus di sebelah biaya */
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            padding: 25px; 
+            border-radius: 10px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+            max-height: 90vh; 
+            overflow-y: auto;
+        }
+        .custom-alert-content {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            padding: 25px;
+            text-align: center;
+        }
+        .custom-alert-content h4 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        .custom-alert-content p {
+            margin: 15px 0 25px 0;
+            line-height: 1.5;
+            color: var(--text-color);
+        }
+        .custom-alert-content .alert-buttons button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        .custom-alert-content .alert-buttons .btn-confirm {
+            background-color: var(--secondary-color);
+        }
+        .custom-alert-content .alert-buttons .btn-confirm:hover {
+            background-color: #1e7e34;
+        }
+        .custom-alert-content .alert-buttons .btn-cancel {
+            background-color: #6c757d;
+        }
+        .custom-alert-content .alert-buttons .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+        
+        .close-button {
+            color: #aaa;
+            font-size: 30px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px; 
+            right: 20px; 
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover {
+            color: var(--danger-color);
+        }
+        
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px; 
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 15px; 
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+
+        .info-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .recipe-section {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            background-color: var(--background-light);
+        }
+        .recipe-section h4 {
+            color: var(--primary-dark);
+            margin-top: 0;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .bahan-mentah-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .bahan-mentah-item select, .bahan-mentah-item input {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        
+        .btn-add-bahan {
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-add-bahan:hover {
+            background-color: #5a6268;
+        }
+
+        .harga-input-group {
+            display: flex;
+            gap: 15px;
+        }
+        .harga-input-group > div {
+            flex-grow: 1;
+        }
+        
+        #edit-modal-cost-info {
+            padding: 10px;
+            background-color: #e9f5ff;
+            border-left: 5px solid var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .bahan-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .bahan-input-group input, .bahan-input-group select {
+            flex-grow: 1;
+            margin: 0;
+        }
+        .btn-toggle-input {
+            padding: 10px 15px;
+            font-size: 0.9em;
+            background-color: #6c757d;
+            color: white;
+            white-space: nowrap;
+        }
+        .btn-toggle-input:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <a href="index.html" aria-label="Kembali ke Beranda"><i class="fas fa-arrow-left"></i></a>
+            <h1>Manajemen Stok</h1>
+        </div>
+        
+        <div class="data-table-container">
+            <div class="table-header">
+                <h2>Produk Jadi <i class="fas fa-box-open"></i></h2>
+                <button class="btn" onclick="tampilkanModalTambahProdukJadi()"><i class="fas fa-plus"></i> Tambah Produk Jadi</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama & Resep</th>
+                            <th>Stok (Otomatis)</th>
+                            <th>Harga Modal (Rp)</th>
+                            <th>Bahan Mentah yang Perlu Ditambah (Min. Stok)</th> 
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="produk-jadi-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="data-table-container">
+            <div class="table-header">
+                <h2>Bahan Mentah <i class="fas fa-seedling"></i></h2>
+                <button class="btn btn-secondary" onclick="tampilkanModalTambahStokBahan()"><i class="fas fa-plus"></i> Tambah/Stok Bahan Mentah</button>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Stok Tersedia</th>
+                            <th>Harga Modal Rata-rata (Rp)</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bahan-mentah-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="data-table-container">
+            <div class="table-header transaksi-header">
+                <h2>Transaksi Stok Terkini <i class="fas fa-history"></i></h2>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Bahan Mentah</th>
+                            <th>Jumlah Tambah</th>
+                            <th>Total Biaya Beli (Rp) & Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaksi-stok-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-alert-modal" class="modal">
+        <div class="custom-alert-content">
+            <h4 id="custom-alert-title">Pesan</h4>
+            <p id="custom-alert-message"></p>
+            <div class="alert-buttons">
+                <button class="btn btn-cancel" id="custom-alert-cancel-btn" style="display: none;">BATALKAN</button>
+                <button class="btn btn-confirm" id="custom-alert-ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="modalTambahProdukJadi" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="tutupModalTambahProdukJadi()">&times;</span>
+            <h3>Tambah Produk Jadi Baru</h3>
+            <form id="form-tambah-produk-jadi">
+                <div class="form-group">
+                    <label for="produk-nama">Nama Produk:</label>
+                    <input type="text" id="produk-nama" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="target-stok-minimal">Target Stok Minimal (Unit):</label>
+                    <input type="number" id="target-stok-minimal" min="1" step="1" value="10" required>
+                    <p class="info-text">Jumlah unit produk yang Anda ingin bahan mentahnya selalu tersedia.</p>
+                </div>
+                
+                <div class="recipe-section">
+                    <h4>Resep: Bahan Mentah yang Dibutuhkan untuk membuat 1 unit (Tidak Wajib)</h4>
+                    <div id="bahan-mentah-list"></div>
+                    <button type="button" class="btn-add-bahan" onclick="tambahInputBahanMentah()">+ Tambah Bahan</button>
+                    <p class="info-text">Masukkan kuantitas desimal (contoh: 0.005 atau 0.0001) jika diperlukan.</p>
+                </div>
+                
+                <button type="submit" class="btn" style="margin-top: 25px;">Simpan Produk Jadi</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="modalTambahStokBahan" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="tutupModalTambahStokBahan()">&times;</span>
+            <h3>Tambah Stok Bahan Mentah</h3>
+            <form id="form-tambah-stok-bahan">
+                <div class="form-group">
+                    <label for="stok-bahan-input-container">Pilih atau Masukkan Nama Bahan Mentah:</label>
+                    
+                    <div id="stok-bahan-input-container" class="bahan-input-group">
+                        <select id="stok-bahan-select" required>
+                            <option value="">-- Pilih Bahan --</option>
+                        </select>
+                        
+                        <input type="text" id="stok-bahan-nama-baru" placeholder="Nama bahan baru..." style="display: none;">
+                        
+                        <button type="button" class="btn-toggle-input" id="btn-toggle-input" onclick="toggleInputBahanMentah()">+ Bahan Baru</button>
+                    </div>
+
+                    <p class="info-text" id="info-bahan-mentah">Pilih dari daftar bahan yang sudah ada.</p>
+                </div>
+                <div class="form-group">
+                    <label for="stok-bahan-jumlah">Jumlah (Kuantitas) yang Ditambahkan:</label>
+                    <input type="number" id="stok-bahan-jumlah" min="0.00001" step="any" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Harga Beli (Pilih salah satu untuk perhitungan modal rata-rata):</label>
+                    <div class="harga-input-group">
+                        <div>
+                            <label for="stok-bahan-harga-per-unit">Harga Beli per Unit:</label>
+                            <input type="number" id="stok-bahan-harga-per-unit" min="0" value="0" step="any">
+                        </div>
+                        <div>
+                            <label for="stok-bahan-harga-per-paket">Harga Beli Total (untuk jumlah di atas):</label>
+                            <input type="number" id="stok-bahan-harga-per-paket" min="0" value="0" step="any">
+                        </div>
+                    </div>
+                    <p class="info-text">Harga modal rata-rata akan diperbarui secara otomatis menggunakan metode rata-rata tertimbang.</p>
+                </div>
+
+                <button type="submit" class="btn btn-secondary">Simpan Stok Bahan</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="modalEditProduk" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="tutupModalEdit()">&times;</span>
+            <h3>Edit Produk/Bahan</h3>
+            <form id="form-edit-produk">
+                <input type="hidden" id="edit-produk-nama-lama">
+                <input type="hidden" id="edit-produk-tipe">
+                
+                <div class="form-group">
+                    <label for="edit-produk-nama">Nama Produk:</label>
+                    <input type="text" id="edit-produk-nama" required>
+                </div>
+                
+                <div id="edit-modal-cost-info" style="display: none;"></div>
+
+                <div class="form-group" id="edit-target-stok-group" style="display: none;">
+                    <label for="edit-target-stok-minimal">Target Stok Minimal (Unit):</label>
+                    <input type="number" id="edit-target-stok-minimal" min="1" step="1" required>
+                    <p class="info-text">Target minimum unit produk yang Anda ingin bahan mentahnya selalu tercukupi.</p>
+                </div>
+
+                <div class="form-group" id="edit-stok-group">
+                    <label for="edit-produk-stok">Jumlah Stok:</label>
+                    <input type="number" id="edit-produk-stok" min="0" step="any" > 
+                    <p class="info-text" id="info-stok-edit"></p>
+                </div>
+                
+                <div class="form-group" id="edit-harga-beli-group" style="display: none;">
+                    <label for="edit-produk-harga-beli">Harga Modal Rata-rata per Unit:</label>
+                    <input type="number" id="edit-produk-harga-beli" min="0" step="any" > 
+                    <p class="info-text">Harga ini adalah rata-rata tertimbang. Hanya ubah jika ada koreksi data.</p>
+                </div>
+                
+                <div class="recipe-section" id="edit-bahan-mentah-group" style="display: none;">
+                    <h4>Resep: Bahan Mentah per 1 unit</h4>
+                    <div id="edit-bahan-mentah-list"></div>
+                    <button type="button" class="btn-add-bahan" onclick="tambahInputBahanMentah('edit')">+ Tambah Bahan</button>
+                </div>
+
+                <button type="submit" class="btn" style="margin-top: 20px;">Simpan Perubahan</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        let daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || [];
+        let stokHistori = JSON.parse(localStorage.getItem('stokHistori')) || [];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            sinkronisasiStokDenganPenjualan();
+            tampilkanDaftarStok();
+            tampilkanTransaksiStok();
+        });
+
+        // --- Fungsi Custom Alert/Confirm (Pengganti alert() dan confirm()) ---
+        let customAlertResolve;
+
+        function customAlert(message, title = "Peringatan!") {
+            document.getElementById('custom-alert-title').textContent = title;
+            document.getElementById('custom-alert-message').textContent = message;
+            document.getElementById('custom-alert-cancel-btn').style.display = 'none';
+            
+            const modal = document.getElementById('custom-alert-modal');
+            modal.style.display = 'flex';
+            
+            return new Promise(resolve => {
+                customAlertResolve = resolve;
+                
+                document.getElementById('custom-alert-ok-btn').onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(true);
+                };
+            });
+        }
+        
+        function customConfirm(message, title = "Konfirmasi") {
+            document.getElementById('custom-alert-title').textContent = title;
+            document.getElementById('custom-alert-message').textContent = message;
+            document.getElementById('custom-alert-cancel-btn').style.display = 'inline-block';
+            
+            const modal = document.getElementById('custom-alert-modal');
+            modal.style.display = 'flex';
+            
+            return new Promise(resolve => {
+                customAlertResolve = resolve;
+                
+                document.getElementById('custom-alert-ok-btn').onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(true);
+                };
+                
+                document.getElementById('custom-alert-cancel-btn').onclick = () => {
+                    modal.style.display = 'none';
+                    resolve(false);
+                };
+            });
+        }
+        // --- Akhir Custom Alert/Confirm ---
+
+
+        function formatRupiah(angka) {
+            if (isNaN(angka) || angka === null) return '0';
+            const num = Math.round(angka); 
+            let reverse = num.toString().split('').reverse().join(''),
+                ribuan = reverse.match(/\d{1,3}/g);
+            ribuan = ribuan.join('.').split('').reverse().join('');
+            return ribuan;
+        }
+        
+        function formatAngka(angka) {
+            if (isNaN(angka) || angka === null) return '0';
+            // Presisi 5 angka di belakang koma untuk kuantitas kecil
+            const formatted = parseFloat(angka).toFixed(5);
+            return formatted.replace(/\.?0+$/, ''); 
+        }
+        
+        function getWaktuLokal() {
+            const now = new Date();
+            const date = now.toLocaleDateString('id-ID');
+            const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            return `${date}, ${time}`;
+        }
+
+        // Fungsi yang dibutuhkan oleh HPP di finance.html
+        function dapatkanTanggalHariIni() {
+            const hariIni = new Date();
+            const year = hariIni.getFullYear();
+            const month = (hariIni.getMonth() + 1).toString().padStart(2, '0');
+            const day = hariIni.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // --- FUNGSI PENTING UNTUK MENCATAT MODAL PENJUALAN (HPP) ---
+        /**
+         * Mencatat biaya pembelian stok baru sebagai "Modal Penjualan (HPP)".
+         * Data ini akan ditarik oleh halaman finance.html.
+         * @param {string} namaProduk - Nama produk/bahan yang dibeli.
+         * @param {number} totalBiaya - Total biaya modal (pembelian) untuk stok ini.
+         */
+        function catatModalPenambahanStok(namaProduk, totalBiaya) {
+            if (totalBiaya <= 0 || isNaN(totalBiaya)) {
+                console.error("[HPP Log] Jumlah modal tidak valid. Pencatatan HPP dibatalkan.");
+                return;
+            }
+
+            const tanggal = dapatkanTanggalHariIni();
+            const uniqueId = `STOK_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+            const modalEntry = {
+                tanggal: tanggal,
+                nama: namaProduk,
+                jumlah: totalBiaya,
+                idRef: uniqueId 
+            };
+
+            let modalStokBaru = JSON.parse(localStorage.getItem('modalStokBaru')) || [];
+            modalStokBaru.push(modalEntry);
+            localStorage.setItem('modalStokBaru', JSON.stringify(modalStokBaru));
+
+            console.log(`[HPP Log] Modal pembelian stok ${namaProduk} sebesar Rp ${totalBiaya} berhasil dicatat.`);
+            
+            // PENTING: Panggil window.dispatchEvent untuk memberitahu halaman lain (finance.html)
+            // agar mereka memperbarui data jika sedang terbuka.
+            window.dispatchEvent(new Event('storage'));
+        }
+        // --- AKHIR FUNGSI PENTING HPP ---
+
+        // --- Fitur Saran Bahan Mentah dengan Target Kustom ---
+        function getSaranBahanMentah(produk) {
+            const TARGET_PRODUKSI = produk.targetStokMinimal || 10; 
+
+            if (produk.isBahanMentah || !produk.bahanMentah || produk.bahanMentah.length === 0) {
+                return `<div class="saran-stok-container saran-cukup">Tidak Ada Resep (Barang Dagangan)</div>`;
+            }
+
+            let saranList = [];
+
+            produk.bahanMentah.forEach(bahan => {
+                const bahanStok = daftarStok.find(p => p.nama === bahan.nama);
+                const stokTersedia = bahanStok ? bahanStok.stok : 0;
+                const jumlahDibutuhkan = bahan.kuantitas;
+                
+                const unitBisaDibuat = (jumlahDibutuhkan > 0) ? Math.floor(stokTersedia / jumlahDibutuhkan) : Infinity;
+                
+                if (unitBisaDibuat < TARGET_PRODUKSI) {
+                    const dibutuhkanTotal = TARGET_PRODUKSI * jumlahDibutuhkan;
+                    const perluDitambah = dibutuhkanTotal - stokTersedia;
+                    
+                    if (perluDitambah > 0) {
+                        saranList.push({
+                            nama: bahan.nama,
+                            kurang: perluDitambah
+                        });
+                    }
+                }
+            });
+
+            if (saranList.length > 0) {
+                const listHTML = saranList.map(item => 
+                    `<li><i class="fas fa-exclamation-circle"></i> **${item.nama}**: Tambah ${formatAngka(item.kurang)}</li>`
+                ).join('');
+                
+                return `
+                    <div class="saran-stok-container saran-kurang">
+                        **Perlu Ditambah** untuk membuat min. ${formatAngka(TARGET_PRODUKSI)} unit:
+                        <ul class="saran-list">${listHTML}</ul>
+                    </div>
+                `;
+            } else {
+                return `<div class="saran-stok-container saran-cukup"><i class="fas fa-check-circle"></i> Bahan Mentah Cukup untuk min. ${formatAngka(TARGET_PRODUKSI)} unit.</div>`;
+            }
+        }
+        // --- Akhir Fitur Saran Bahan Mentah ---
+
+
+        function hitungStokProdukJadi(produk) {
+            if (produk.isBahanMentah || !produk.bahanMentah || produk.bahanMentah.length === 0) {
+                return produk.stok;
+            }
+
+            let minStokProduksi = Infinity;
+
+            produk.bahanMentah.forEach(bahan => {
+                const bahanStok = daftarStok.find(p => p.nama === bahan.nama);
+                const stokTersedia = bahanStok ? bahanStok.stok : 0;
+                const jumlahDibutuhkan = bahan.kuantitas;
+                
+                if (jumlahDibutuhkan > 0) {
+                    const unitBisaDibuat = Math.floor(stokTersedia / jumlahDibutuhkan);
+                    if (unitBisaDibuat < minStokProduksi) {
+                        minStokProduksi = unitBisaDibuat;
+                    }
+                }
+            });
+
+            return minStokProduksi === Infinity ? 0 : minStokProduksi;
+        }
+
+        function hitungHargaModalProdukJadi(produk) {
+            if (produk.isBahanMentah) return produk.hargaBeli || 0;
+
+            let totalHargaModal = 0;
+            if (produk.bahanMentah && produk.bahanMentah.length > 0) {
+                produk.bahanMentah.forEach(bahan => {
+                    const bahanStok = daftarStok.find(p => p.nama === bahan.nama);
+                    const hargaModalBahan = bahanStok ? (bahanStok.hargaBeli || 0) : 0;
+                    totalHargaModal += (hargaModalBahan * bahan.kuantitas);
+                });
+            } else {
+                return produk.hargaBeli || 0; 
+            }
+            return totalHargaModal;
+        }
+        
+        function getStokStatus(stok, tipe) {
+            let statusClass = 'status-ok';
+            let statusIcon = 'fa-check-circle';
+            let statusText = 'Cukup';
+
+            const limitRendah = tipe === 'jadi' ? 10 : 20;
+
+            if (stok < limitRendah && stok > 0) { 
+                statusClass = 'status-warning';
+                statusIcon = 'fa-exclamation-triangle';
+                statusText = 'Rendah';
+            }
+            if (stok <= 0) {
+                statusClass = 'status-danger';
+                statusIcon = 'fa-times-circle';
+                statusText = 'Habis';
+            }
+
+            return `<span class="status-badge ${statusClass}"><i class="fas ${statusIcon}"></i> ${statusText} (${formatAngka(stok)})</span>`;
+        }
+        
+        // --- Sinkronisasi Penjualan ---
+        function sinkronisasiStokDenganPenjualan() {
+            let isChanged = false;
+            let transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
+
+            transaksiHistori.forEach(transaksi => {
+                if (!transaksi.isSynced) {
+                    transaksi.items.forEach(itemPenjualan => {
+                        const produkStok = daftarStok.find(p => p.nama === itemPenjualan.produk);
+                        if (produkStok) {
+                            isChanged = true;
+                            
+                            if (!produkStok.isBahanMentah && produkStok.bahanMentah && produkStok.bahanMentah.length > 0) {
+                                produkStok.bahanMentah.forEach(bahan => {
+                                    const bahanStok = daftarStok.find(p => p.nama === bahan.nama);
+                                    if (bahanStok) {
+                                        bahanStok.stok -= (bahan.kuantitas * itemPenjualan.kuantitas);
+                                    }
+                                });
+                            } 
+                            else if (!produkStok.isBahanMentah) {
+                                produkStok.stok -= itemPenjualan.kuantitas;
+                            }
+                        }
+                    });
+                    transaksi.isSynced = true;
+                }
+            });
+
+            if (isChanged) {
+                localStorage.setItem('transaksiHistori', JSON.stringify(transaksiHistori));
+                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+            }
+        }
+        
+        // --- Transaksi Stok ---
+        function catatTransaksiStok(namaBahan, jumlahTambah, totalBiaya, hargaUnitBaru, stokBaru) {
+            const transaksi = {
+                waktu: getWaktuLokal(),
+                nama: namaBahan,
+                jumlah: jumlahTambah,
+                biaya: totalBiaya,
+                hargaUnitBaru: hargaUnitBaru,
+                stokBaru: stokBaru
+            };
+            
+            stokHistori.unshift(transaksi); 
+            localStorage.setItem('stokHistori', JSON.stringify(stokHistori));
+            tampilkanTransaksiStok(); 
+        }
+        
+        function tampilkanTransaksiStok() {
+            const tbody = document.getElementById('transaksi-stok-table-body');
+            tbody.innerHTML = '';
+            
+            if (stokHistori.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada transaksi penambahan stok bahan mentah.</td></tr>';
+                return;
+            }
+            
+            const transaksiTerkini = stokHistori.slice(0, 10); // Tampilkan 10 transaksi terkini
+
+            transaksiTerkini.forEach((t, indexLocal) => {
+                // indexLocal adalah index transaksi dalam array transaksiTerkini (slice dari stokHistori)
+                const indexAsli = indexLocal; // Karena kita menggunakan slice dari depan (unshift), index local sama dengan index di stokHistori
+                
+                const row = document.createElement('tr');
+                // Menggunakan formatRupiah(t.biaya) tanpa format Angka di kolom biaya
+                row.innerHTML = `
+                    <td>${t.waktu}</td>
+                    <td>${t.nama}</td>
+                    <td class="transaksi-cell-add">+ ${formatAngka(t.jumlah)}</td>
+                    <td class="transaksi-cell-cost">
+                        Rp ${formatRupiah(t.biaya)}
+                        <button class="btn btn-delete" style="padding: 5px 8px; margin-left: 10px; font-size: 0.8em;" onclick="handleHapusTransaksiStok(${indexAsli}, '${t.nama}')"><i class="fas fa-trash"></i> Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        /**
+         * Fungsi untuk menghapus transaksi stok bahan mentah dan mengembalikan kondisi stok/modal.
+         * @param {number} index - Index transaksi di array stokHistori.
+         * @param {string} namaBahan - Nama bahan mentah yang terpengaruh.
+         */
+        async function handleHapusTransaksiStok(index, namaBahan) {
+            const transaksi = stokHistori[index];
+            if (!transaksi) return;
+
+            const konfirmasi = await customConfirm(
+                `Anda yakin ingin menghapus transaksi penambahan stok bahan mentah **${transaksi.nama}** sebanyak **${formatAngka(transaksi.jumlah)}** dengan total biaya **Rp ${formatRupiah(transaksi.biaya)}**? \n\nPenghapusan ini akan: \n1. Mengurangi stok bahan mentah. \n2. Menghitung ulang harga modal rata-rata bahan mentah.`, 
+                "Konfirmasi Penghapusan Transaksi"
+            );
+
+            if (konfirmasi) {
+                const bahanStok = daftarStok.find(p => p.nama === namaBahan);
+                if (!bahanStok) {
+                    await customAlert(`Bahan mentah '${namaBahan}' tidak ditemukan di daftar stok.`, "Gagal!");
+                    return;
+                }
+
+                const jumlahYangDihapus = transaksi.jumlah;
+                const totalBiayaDihapus = transaksi.biaya; 
+                
+                // 1. Hitung ulang stok dan harga modal (Metode Rata-rata Tertimbang)
+                const stokLama = bahanStok.stok;
+                const hargaModalLama = bahanStok.hargaBeli || 0;
+                
+                // Hitung total nilai stok sebelum transaksi yang akan dihapus
+                // Nilai total sebelum transaksi = (Stok Saat Ini * Harga Modal Rata-rata Saat Ini)
+                const totalNilaiSebelumTransaksi = stokLama * hargaModalLama;
+                
+                // Nilai total setelah transaksi dihapus
+                const totalNilaiSetelahDihapus = totalNilaiSebelumTransaksi - totalBiayaDihapus; 
+                
+                const stokBaru = stokLama - jumlahYangDihapus;
+                
+                let hargaModalBaru;
+                if (stokBaru > 0) {
+                    // Harga modal rata-rata baru
+                    hargaModalBaru = totalNilaiSetelahDihapus / stokBaru;
+                } else {
+                    // Jika stok habis setelah penghapusan, harga modal menjadi 0
+                    hargaModalBaru = 0;
+                }
+                
+                // Update data di daftarStok
+                bahanStok.stok = Math.max(0, stokBaru); 
+                bahanStok.hargaBeli = Math.max(0, hargaModalBaru);
+                
+                // 2. Hapus transaksi dari histori
+                stokHistori.splice(index, 1);
+
+                // 3. Simpan dan Tampilkan ulang
+                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                localStorage.setItem('stokHistori', JSON.stringify(stokHistori));
+                
+                tampilkanDaftarStok();
+                tampilkanTransaksiStok(); 
+
+                await customAlert(
+                    `Transaksi stok '${transaksi.nama}' berhasil dihapus. \n\n**Perubahan Stok**: ${formatAngka(stokLama)} $\\rightarrow$ ${formatAngka(bahanStok.stok)} \n**Harga Modal**: Rp ${formatRupiah(hargaModalLama)} $\\rightarrow$ Rp ${formatRupiah(bahanStok.hargaBeli)}`, 
+                    "Penghapusan Berhasil!"
+                );
+            }
+        }
+
+        // --- Tampilan Stok ---
+        function tampilkanDaftarStok() {
+            const tbodyProdukJadi = document.getElementById('produk-jadi-table-body');
+            const tbodyBahanMentah = document.getElementById('bahan-mentah-table-body');
+            tbodyProdukJadi.innerHTML = '';
+            tbodyBahanMentah.innerHTML = '';
+            
+            // Tambahkan properti targetStokMinimal jika belum ada (untuk data lama)
+            daftarStok = daftarStok.map(p => {
+                if (!p.isBahanMentah && typeof p.targetStokMinimal === 'undefined') {
+                    p.targetStokMinimal = 10; // Default nilai 10
+                }
+                return p;
+            });
+
+            const produkJadi = daftarStok.filter(p => !p.isBahanMentah);
+            const bahanMentah = daftarStok.filter(p => p.isBahanMentah);
+
+            // Tampilkan Produk Jadi
+            if (produkJadi.length === 0) {
+                tbodyProdukJadi.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada data produk jadi.</td></tr>';
+            } else {
+                produkJadi.forEach(produk => {
+                    const stokOtomatis = hitungStokProdukJadi(produk);
+                    const hargaModal = hitungHargaModalProdukJadi(produk);
+                    const saranBahan = getSaranBahanMentah(produk);
+                    
+                    let resepHTML = '';
+                    if (produk.bahanMentah && produk.bahanMentah.length > 0) {
+                         resepHTML = `<span class="recipe-info">Resep: ${produk.bahanMentah.map(b => `${formatAngka(b.kuantitas)} ${b.nama}`).join(', ')}</span>`;
+                    } else {
+                        resepHTML = '<span class="recipe-info" style="border-left: 3px solid #ffc107;">*Barang dagangan (Stok manual)</span>';
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${produk.nama} ${resepHTML}</td>
+                        <td>${getStokStatus(stokOtomatis, 'jadi')}</td>
+                        <td>Rp ${formatRupiah(hargaModal)}</td>
+                        <td>${saranBahan}</td>
+                        <td class="action-cell">
+                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${produk.nama}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-delete" onclick="handleHapusStok('${produk.nama}')"><i class="fas fa-trash"></i> Hapus</button>
+                        </td>
+                    `;
+                    tbodyProdukJadi.appendChild(row);
+                });
+            }
+
+            // Tampilkan Bahan Mentah
+            if (bahanMentah.length === 0) {
+                tbodyBahanMentah.innerHTML = '<tr><td colspan="4" style="text-align: center;">Tidak ada data bahan mentah.</td></tr>';
+            } else {
+                bahanMentah.forEach(produk => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${produk.nama}</td>
+                        <td>${getStokStatus(produk.stok, 'bahan')}</td>
+                        <td>Rp ${formatRupiah(produk.hargaBeli || 0)}</td>
+                        <td class="action-cell">
+                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${produk.nama}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-delete" onclick="handleHapusStok('${produk.nama}')"><i class="fas fa-trash"></i> Hapus</button>
+                        </td>
+                    `;
+                    tbodyBahanMentah.appendChild(row);
+                });
+            }
+            
+            localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+            updateStokBahanMentahSelect();
+        }
+        
+        // --- Perbaikan: Update Select Bahan Mentah ---
+        function updateStokBahanMentahSelect() {
+            const select = document.getElementById('stok-bahan-select');
+            select.innerHTML = '<option value="">-- Pilih Bahan --</option>';
+            
+            const bahanMentahTersedia = daftarStok.filter(p => p.isBahanMentah).sort((a, b) => a.nama.localeCompare(b.nama));
+
+            bahanMentahTersedia.forEach(bahan => {
+                const option = document.createElement('option');
+                option.value = bahan.nama;
+                option.textContent = bahan.nama;
+                select.appendChild(option);
+            });
+        }
+        
+        // --- Perbaikan: Toggle Input Bahan Mentah ---
+        let isNewBahanMode = false;
+        
+        function toggleInputBahanMentah() {
+            const select = document.getElementById('stok-bahan-select');
+            const inputBaru = document.getElementById('stok-bahan-nama-baru');
+            const btnToggle = document.getElementById('btn-toggle-input');
+            const infoText = document.getElementById('info-bahan-mentah');
+            
+            isNewBahanMode = !isNewBahanMode;
+            
+            if (isNewBahanMode) {
+                // Mode Input Teks (Bahan Baru)
+                select.style.display = 'none';
+                select.removeAttribute('required');
+                select.value = ""; 
+                
+                inputBaru.style.display = 'block';
+                inputBaru.setAttribute('required', 'required');
+                inputBaru.focus();
+                
+                btnToggle.textContent = '<< Pilih Bahan';
+                infoText.innerHTML = 'Anda akan menambahkan bahan mentah baru. Pastikan namanya unik.';
+            } else {
+                // Mode Select (Pilih dari Daftar)
+                inputBaru.style.display = 'none';
+                inputBaru.removeAttribute('required');
+                inputBaru.value = "";
+                
+                select.style.display = 'block';
+                select.setAttribute('required', 'required');
+                
+                btnToggle.textContent = '+ Bahan Baru';
+                infoText.innerHTML = 'Pilih dari daftar bahan yang sudah ada.';
+            }
+        }
+        // --- Akhir Perbaikan Input Toggle ---
+
+
+        // --- Modal Tambah Produk Jadi ---
+        function tampilkanModalTambahProdukJadi() {
+            document.getElementById('form-tambah-produk-jadi').reset();
+            document.getElementById('bahan-mentah-list').innerHTML = '';
+            document.getElementById('modalTambahProdukJadi').style.display = 'flex';
+        }
+        
+        function tutupModalTambahProdukJadi() {
+            document.getElementById('modalTambahProdukJadi').style.display = 'none';
+        }
+        
+        function tambahInputBahanMentah(tipe = 'tambah', namaBahan = '', kuantitas = '') {
+            const bahanMentahListId = tipe === 'edit' ? 'edit-bahan-mentah-list' : 'bahan-mentah-list';
+            const bahanMentahList = document.getElementById(bahanMentahListId);
+            const newDiv = document.createElement('div');
+            newDiv.className = 'bahan-mentah-item';
+            
+            const select = document.createElement('select');
+            select.className = 'select-bahan-mentah';
+            select.required = true;
+            
+            const placeholderOption = document.createElement('option');
+            placeholderOption.value = "";
+            placeholderOption.textContent = "Pilih Bahan Mentah";
+            select.appendChild(placeholderOption);
+
+            const bahanMentahTersedia = daftarStok.filter(p => p.isBahanMentah);
+            bahanMentahTersedia.forEach(bahan => {
+                const option = document.createElement('option');
+                option.value = bahan.nama;
+                option.textContent = bahan.nama;
+                select.appendChild(option);
+            });
+            
+            const kuantitasTersimpan = kuantitas ? formatAngka(kuantitas) : '';
+            
+            newDiv.innerHTML = `
+                <input type="number" placeholder="Kuantitas (Contoh: 0.005)" class="kuantitas-bahan-mentah" min="0.00001" step="any" required value="${kuantitasTersimpan}">
+                <button type="button" class="btn btn-delete" style="padding: 8px 10px;" onclick="this.parentNode.remove()"><i class="fas fa-trash"></i></button>
+            `;
+            newDiv.prepend(select);
+            
+            if (namaBahan) {
+                select.value = namaBahan;
+            }
+            
+            bahanMentahList.appendChild(newDiv);
+        }
+
+        document.getElementById('form-tambah-produk-jadi').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const namaProduk = document.getElementById('produk-nama').value.trim();
+            const targetStokMinimal = parseInt(document.getElementById('target-stok-minimal').value) || 10;
+            
+            const existingProduct = daftarStok.find(p => p.nama.toLowerCase() === namaProduk.toLowerCase());
+
+            if (existingProduct) {
+                await customAlert(`Produk dengan nama '${namaProduk}' sudah ada.`, "Gagal Menambah Produk");
+                return;
+            }
+
+            let bahanMentah = [];
+            const bahanInputs = document.querySelectorAll('#bahan-mentah-list .bahan-mentah-item');
+            bahanInputs.forEach(item => {
+                const namaBahan = item.querySelector('.select-bahan-mentah').value;
+                const kuantitasBahan = parseFloat(item.querySelector('.kuantitas-bahan-mentah').value);
+                if (namaBahan && kuantitasBahan > 0) {
+                    // Simpan sebagai float murni
+                    bahanMentah.push({ nama: namaBahan, kuantitas: kuantitasBahan });
+                }
+            });
+            
+            const newProduct = {
+                nama: namaProduk,
+                stok: 0, 
+                hargaBeli: 0, 
+                isBahanMentah: false,
+                bahanMentah: bahanMentah,
+                targetStokMinimal: targetStokMinimal,
+            };
+            
+            if (bahanMentah.length === 0) {
+                 const jumlahStokStr = prompt(`Produk '${namaProduk}' adalah barang dagangan/non-produksi. Masukkan Stok Awal (Contoh: 10):`, 0);
+                 if (jumlahStokStr === null || isNaN(parseFloat(jumlahStokStr)) || parseFloat(jumlahStokStr) < 0) {
+                     await customAlert("Penambahan produk dibatalkan. Stok awal tidak valid.");
+                     return;
+                 }
+                 newProduct.stok = parseFloat(jumlahStokStr);
+                 
+                 const hargaBeliStr = prompt(`Masukkan Harga Modal/Beli per Unit untuk '${namaProduk}' (Contoh: 5000):`, 0);
+                 if (hargaBeliStr === null || isNaN(parseFloat(hargaBeliStr)) || parseFloat(hargaBeliStr) < 0) {
+                     await customAlert("Penambahan produk dibatalkan. Harga modal tidak valid.");
+                     return;
+                 }
+                 newProduct.hargaBeli = parseFloat(hargaBeliStr);
+            }
+            
+            daftarStok.push(newProduct);
+            
+            localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+            tampilkanDaftarStok();
+            tutupModalTambahProdukJadi();
+            await customAlert(`Produk jadi baru '${namaProduk}' berhasil ditambahkan. Target Stok Minimal: ${targetStokMinimal} unit.`, "Berhasil!");
+        });
+
+        // --- Modal Tambah/Stok Bahan Mentah ---
+        function tampilkanModalTambahStokBahan() {
+            document.getElementById('form-tambah-stok-bahan').reset();
+            // Reset ke mode Select
+            isNewBahanMode = false;
+            document.getElementById('stok-bahan-select').style.display = 'block';
+            document.getElementById('stok-bahan-select').setAttribute('required', 'required');
+            document.getElementById('stok-bahan-nama-baru').style.display = 'none';
+            document.getElementById('stok-bahan-nama-baru').removeAttribute('required');
+            document.getElementById('btn-toggle-input').textContent = '+ Bahan Baru';
+            document.getElementById('info-bahan-mentah').innerHTML = 'Pilih dari daftar bahan yang sudah ada.';
+            
+            updateStokBahanMentahSelect();
+            document.getElementById('modalTambahStokBahan').style.display = 'flex';
+        }
+        
+        function tutupModalTambahStokBahan() {
+            document.getElementById('modalTambahStokBahan').style.display = 'none';
+        }
+
+        document.getElementById('form-tambah-stok-bahan').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            let namaProduk;
+            if (isNewBahanMode) {
+                namaProduk = document.getElementById('stok-bahan-nama-baru').value.trim();
+            } else {
+                namaProduk = document.getElementById('stok-bahan-select').value.trim();
+            }
+            
+            const jumlahDitambah = parseFloat(document.getElementById('stok-bahan-jumlah').value);
+            const hargaPerUnitInput = parseFloat(document.getElementById('stok-bahan-harga-per-unit').value) || 0;
+            const hargaPerPaketInput = parseFloat(document.getElementById('stok-bahan-harga-per-paket').value) || 0;
+            
+            if (namaProduk === "" || jumlahDitambah <= 0 || (hargaPerUnitInput <= 0 && hargaPerPaketInput <= 0)) {
+                await customAlert("Silakan lengkapi Nama Bahan, Jumlah, dan setidaknya salah satu Harga Beli.");
+                return;
+            }
+            
+            let hargaBeliUnitBaru = hargaPerUnitInput > 0 ? hargaPerUnitInput : (hargaPerPaketInput / jumlahDitambah);
+            
+            // Perbaikan: Hitung Total Biaya Pembelian dengan benar
+            let totalBiayaPembelian = hargaPerUnitInput > 0 ? (jumlahDitambah * hargaPerUnitInput) : hargaPerPaketInput;
+
+
+            let produk = daftarStok.find(p => p.nama.toLowerCase() === namaProduk.toLowerCase());
+
+            if (!produk) {
+                if (isNewBahanMode) {
+                    const konfirmasi = await customConfirm(`Bahan mentah '${namaProduk}' belum ada. Apakah Anda ingin menambahkannya sebagai bahan mentah baru?`);
+                    if (konfirmasi) {
+                        produk = {
+                            nama: namaProduk,
+                            stok: 0,
+                            hargaBeli: 0,
+                            isBahanMentah: true,
+                            bahanMentah: []
+                        };
+                        daftarStok.push(produk);
+                    } else {
+                        return;
+                    }
+                } else {
+                    await customAlert("Silakan pilih bahan mentah dari daftar atau klik '+ Bahan Baru' untuk memasukkan nama baru.");
+                    return;
+                }
+            } else if (!produk.isBahanMentah) {
+                 await customAlert(`Produk '${namaProduk}' sudah terdaftar sebagai Produk Jadi.`);
+                 return;
+            }
+            
+            const totalNilaiLama = produk.stok * (produk.hargaBeli || 0);
+            const totalNilaiBaru = jumlahDitambah * hargaBeliUnitBaru;
+            const stokTotalBaru = produk.stok + jumlahDitambah;
+            
+            produk.stok = stokTotalBaru;
+            produk.hargaBeli = stokTotalBaru > 0 ? (totalNilaiLama + totalNilaiBaru) / stokTotalBaru : 0;
+            
+            if (totalBiayaPembelian > 0) {
+                 // 🌟🌟 BARIS KRUSIAL: MENCATAT MODAL PENJUALAN (HPP) 🌟🌟
+                 catatModalPenambahanStok(namaProduk, totalBiayaPembelian); 
+                 // 🌟🌟 AKHIR BARIS KRUSIAL 🌟🌟
+                 
+                 // Catat ke histori stok lokal
+                 catatTransaksiStok(namaProduk, jumlahDitambah, totalBiayaPembelian, produk.hargaBeli, produk.stok);
+            }
+
+            localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+            tutupModalTambahStokBahan();
+            tampilkanDaftarStok();
+            await customAlert(`Stok bahan mentah '${produk.nama}' berhasil diperbarui. Stok baru: ${formatAngka(produk.stok)}. Harga modal rata-rata: Rp ${formatRupiah(produk.hargaBeli)}`, "Berhasil Menambah Stok!");
+        });
+
+        // --- Edit dan Hapus Produk ---
+        function tampilkanModalEdit(namaProduk) {
+            const produk = daftarStok.find(p => p.nama === namaProduk);
+            if (!produk) return;
+            
+            document.getElementById('edit-produk-nama-lama').value = produk.nama;
+            document.getElementById('edit-produk-nama').value = produk.nama;
+            document.getElementById('edit-produk-tipe').value = produk.isBahanMentah ? 'bahan' : 'jadi';
+            
+            const infoStokEdit = document.getElementById('info-stok-edit');
+            const editStokInput = document.getElementById('edit-produk-stok');
+            const editHargaBeliInput = document.getElementById('edit-produk-harga-beli');
+            
+            const editStokGroup = document.getElementById('edit-stok-group');
+            const editHargaBeliGroup = document.getElementById('edit-harga-beli-group');
+            const editBahanMentahGroup = document.getElementById('edit-bahan-mentah-group');
+            const editModalCostInfo = document.getElementById('edit-modal-cost-info');
+            const editTargetStokGroup = document.getElementById('edit-target-stok-group');
+
+            // Reset required attribute
+            editStokInput.removeAttribute('required');
+            editHargaBeliInput.removeAttribute('required');
+            
+            document.getElementById('edit-bahan-mentah-list').innerHTML = '';
+            editModalCostInfo.style.display = 'none';
+            editTargetStokGroup.style.display = 'none';
+            editStokGroup.style.display = 'block';
+
+            if (produk.isBahanMentah) {
+                // Bahan Mentah
+                editStokInput.value = formatAngka(produk.stok); 
+                editHargaBeliInput.value = formatAngka(produk.hargaBeli); 
+                infoStokEdit.textContent = 'Ini adalah stok fisik. Ubah nilai ini untuk koreksi data.';
+                editHargaBeliGroup.style.display = 'block';
+                editStokInput.setAttribute('required', 'required'); 
+                editHargaBeliInput.setAttribute('required', 'required'); 
+
+                editBahanMentahGroup.style.display = 'none';
+                editModalCostInfo.style.display = 'block';
+                editModalCostInfo.innerHTML = `Harga Modal Rata-rata saat ini: **Rp ${formatRupiah(produk.hargaBeli)}**`;
+                
+            } else {
+                // Produk Jadi
+                const hargaModalOtomatis = hitungHargaModalProdukJadi(produk);
+                document.getElementById('edit-target-stok-minimal').value = produk.targetStokMinimal || 10;
+                editTargetStokGroup.style.display = 'block';
+                
+                editModalCostInfo.style.display = 'block';
+                editModalCostInfo.innerHTML = `Harga Modal Otomatis (Resep): **Rp ${formatRupiah(hargaModalOtomatis)}**`;
+                
+                if (produk.bahanMentah && produk.bahanMentah.length > 0) {
+                     // Produk jadi dengan resep (produksi)
+                    editStokGroup.style.display = 'none'; 
+                    editHargaBeliGroup.style.display = 'none'; 
+                    
+                    infoStokEdit.textContent = `Stok dihitung otomatis dari resep. Stok tersedia: ${hitungStokProdukJadi(produk)}`;
+                    editBahanMentahGroup.style.display = 'block';
+
+                    produk.bahanMentah.forEach(bahan => {
+                        tambahInputBahanMentah('edit', bahan.nama, bahan.kuantitas); 
+                    });
+                } else {
+                    // Produk jadi tanpa resep (barang dagangan)
+                    editStokGroup.style.display = 'block';
+                    editStokInput.value = formatAngka(produk.stok); 
+                    editHargaBeliInput.value = formatAngka(produk.hargaBeli); 
+                    editHargaBeliGroup.style.display = 'block';
+                    editStokInput.setAttribute('required', 'required'); 
+                    editHargaBeliInput.setAttribute('required', 'required'); 
+
+                    infoStokEdit.textContent = 'Ini adalah stok barang dagangan. Stok dan Harga Modal dapat diubah manual.';
+                    editBahanMentahGroup.style.display = 'none';
+                }
+            }
+
+            document.getElementById('modalEditProduk').style.display = 'flex';
+        }
+
+        function tutupModalEdit() {
+            document.getElementById('modalEditProduk').style.display = 'none';
+        }
+
+        document.getElementById('form-edit-produk').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const namaLama = document.getElementById('edit-produk-nama-lama').value;
+            const namaBaru = document.getElementById('edit-produk-nama').value.trim();
+            const tipeProduk = document.getElementById('edit-produk-tipe').value;
+            const targetStokMinimalBaru = parseInt(document.getElementById('edit-target-stok-minimal').value) || 10;
+
+            const stokInput = document.getElementById('edit-produk-stok');
+            const hargaBeliInput = document.getElementById('edit-produk-harga-beli');
+            
+            const stokBaru = stokInput.parentNode.style.display !== 'none' ? parseFloat(stokInput.value) : undefined;
+            const hargaBeliBaru = hargaBeliInput.parentNode.style.display !== 'none' ? parseFloat(hargaBeliInput.value) : undefined;
+
+
+            const produkIndex = daftarStok.findIndex(p => p.nama === namaLama);
+            if (produkIndex !== -1) {
+                daftarStok[produkIndex].nama = namaBaru;
+                daftarStok[produkIndex].targetStokMinimal = targetStokMinimalBaru; 
+
+                // Hanya update stok dan harga jika itu adalah Bahan Mentah atau Produk Dagangan
+                if (tipeProduk === 'bahan' || (tipeProduk === 'jadi' && daftarStok[produkIndex].bahanMentah.length === 0)) {
+                    if (stokBaru !== undefined) daftarStok[produkIndex].stok = stokBaru;
+                    if (hargaBeliBaru !== undefined) daftarStok[produkIndex].hargaBeli = hargaBeliBaru;
+                }
+                
+                if (tipeProduk === 'jadi') {
+                    let bahanMentahBaru = [];
+                    const bahanInputs = document.querySelectorAll('#edit-bahan-mentah-list .bahan-mentah-item');
+                    bahanInputs.forEach(item => {
+                        const select = item.querySelector('.select-bahan-mentah');
+                        const input = item.querySelector('.kuantitas-bahan-mentah');
+                        const namaBahan = select.value;
+                        const kuantitasBahan = parseFloat(input.value);
+                        if (namaBahan && kuantitasBahan > 0) {
+                            // Simpan sebagai float murni
+                            bahanMentahBaru.push({ nama: namaBahan, kuantitas: kuantitasBahan });
+                        }
+                    });
+                    
+                    daftarStok[produkIndex].bahanMentah = bahanMentahBaru;
+                    
+                    if (bahanMentahBaru.length > 0) {
+                         daftarStok[produkIndex].hargaBeli = hitungHargaModalProdukJadi(daftarStok[produkIndex]);
+                    }
+                }
+
+                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                tampilkanDaftarStok();
+                tutupModalEdit();
+                await customAlert(`Produk '${namaLama}' berhasil diperbarui.`, "Berhasil!");
+            }
+        });
+
+        async function handleHapusStok(namaProduk) {
+            const konfirmasi = await customConfirm(`Apakah Anda yakin ingin menghapus stok '${namaProduk}'? Tindakan ini tidak dapat dibatalkan.`, "Hapus Stok");
+            
+            if (konfirmasi) {
+                const index = daftarStok.findIndex(p => p.nama === namaProduk);
+                if (index !== -1) {
+                    daftarStok.splice(index, 1);
+                    localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                    tampilkanDaftarStok();
+                    await customAlert("Stok berhasil dihapus.", "Berhasil!");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
