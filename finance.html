@@ -6,7 +6,6 @@
     <title>Laporan Keuangan | Aplikasi Bisnis</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* [STYLES TETAP SAMA] */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
         :root {
@@ -24,9 +23,10 @@
             --expense-color: #dc3545;
             --modal-color: #ffc107; 
             --profit-color: #007BFF;
+            --gross-profit-color: #00A65A; 
 
-            --edit-color: #17a2b8; /* Info Blue */
-            --delete-color: #dc3545; /* Danger Red */
+            --edit-color: #17a2b8; 
+            --delete-color: #dc3545; 
         }
 
         body {
@@ -49,7 +49,7 @@
         .header {
             display: flex;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px; 
         }
 
         .header a {
@@ -69,10 +69,45 @@
             margin: 0;
         }
         
+        .header-filters {
+            display: flex;
+            align-items: flex-end; 
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: var(--card-background);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+        }
+
+        .header-filters .filter-group {
+            flex: none;
+            min-width: 150px;
+        }
+        
+        .btn-filter-apply {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            height: 44px; 
+        }
+
+        .btn-filter-apply:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 20px; 
             margin-bottom: 40px;
         }
 
@@ -107,11 +142,13 @@
         .hpp { border-left-color: var(--modal-color); }
         .profit { border-left-color: var(--profit-color); }
         .expense { border-left-color: var(--expense-color); }
+        .gross-profit { border-left-color: var(--gross-profit-color); }
 
         .income .value { color: var(--income-color); }
         .hpp .value { color: var(--modal-color); }
         .profit .value { color: var(--profit-color); }
         .expense .value { color: var(--expense-color); }
+        .gross-profit .value { color: var(--gross-profit-color); }
 
         .data-table-container {
             background-color: var(--card-background);
@@ -201,7 +238,7 @@
         th, td {
             padding: 15px;
             border-bottom: 1px solid var(--border-color);
-            white-space: nowrap; /* Mencegah konten tabel terlalu banyak terpotong */
+            white-space: nowrap; 
         }
 
         th {
@@ -239,7 +276,6 @@
             color: white;
         }
         
-        /* --- MODAL STYLES --- */
         .modal {
             display: none;
             position: fixed;
@@ -327,6 +363,31 @@
             <h1>Laporan Keuangan</h1>
         </div>
         
+        <div class="header-filters">
+            <div class="filter-group">
+                <label for="periode-ringkasan">Pilih Jenis Periode:</label>
+                <select id="periode-ringkasan" onchange="toggleSpecificFilters()">
+                    <option value="Semua">Semua Waktu</option>
+                    <option value="Hari">Hari Ini</option>
+                    <option value="Minggu">7 Hari Terakhir</option>
+                    <option value="BulanSpesifik">Bulan & Tahun Spesifik</option>
+                    <option value="TahunSpesifik">Tahun Spesifik</option>
+                </select>
+            </div>
+            
+            <div class="filter-group specific-filter" id="bulan-spesifik-group" style="display: none;">
+                <label for="filter-month">Bulan:</label>
+                <input type="month" id="filter-month">
+            </div>
+
+            <div class="filter-group specific-filter" id="tahun-spesifik-group" style="display: none;">
+                <label for="filter-year">Tahun:</label>
+                <input type="number" id="filter-year" min="2000" max="2099" placeholder="Contoh: 2024">
+            </div>
+            
+            <button class="btn-filter-apply" onclick="tampilkanRingkasanKeuangan()"><i class="fas fa-filter"></i> Tampilkan Data</button>
+            <small style="margin-left: auto; align-self: center; color: var(--light-text);" id="periode-display-info">Ringkasan: Semua Waktu</small>
+        </div>
         <div class="summary-grid">
             <div class="summary-card income">
                 <div class="label">Omset (Pendapatan)</div>
@@ -335,6 +396,10 @@
             <div class="summary-card hpp">
                 <div class="label">Modal Penjualan (HPP)</div>
                 <div class="value" id="total-modal-penjualan">Rp 0</div>
+            </div>
+            <div class="summary-card gross-profit">
+                <div class="label">Pendapatan Kotor</div>
+                <div class="value" id="total-pendapatan-kotor">Rp 0</div>
             </div>
             <div class="summary-card expense">
                 <div class="label">Pengeluaran Lain</div>
@@ -345,7 +410,7 @@
                 <div class="value" id="total-profit">Rp 0</div>
             </div>
         </div>
-
+        
         <div class="data-table-container">
             <div class="table-header">
                 <h2>Riwayat Transaksi</h2>
@@ -353,13 +418,24 @@
             </div>
 
             <div class="filter-container">
+                <div class="filter-group" style="flex: initial; min-width: 150px;">
+                    <label for="filter-limit">Tampilkan Data:</label>
+                    <select id="filter-limit" onchange="filterTransaksi()">
+                        <option value="10">10 Data Terbaru</option>
+                        <option value="20">20 Data Terbaru</option>
+                        <option value="50">50 Data Terbaru</option>
+                        <option value="100">100 Data Terbaru</option>
+                        <option value="150">150 Data Terbaru</option>
+                        <option value="All">Semua Data</option>
+                    </select>
+                </div>
                 <div class="filter-group">
                     <label for="filter-nama">Nama Transaksi:</label>
-                    <input type="text" id="filter-nama" placeholder="Cari nama...">
+                    <input type="text" id="filter-nama" placeholder="Cari nama..." oninput="filterTransaksi()">
                 </div>
                 <div class="filter-group">
                     <label for="filter-kategori">Tipe Transaksi:</label>
-                    <select id="filter-kategori">
+                    <select id="filter-kategori" onchange="filterTransaksi()">
                         <option value="">Semua Tipe</option>
                         <option value="Pendapatan">Pendapatan</option>
                         <option value="Modal Penjualan">Modal Penjualan (HPP)</option>
@@ -368,11 +444,11 @@
                 </div>
                 <div class="filter-group">
                     <label for="filter-tanggal-mulai">Tanggal Mulai:</label>
-                    <input type="date" id="filter-tanggal-mulai">
+                    <input type="date" id="filter-tanggal-mulai" onchange="filterTransaksi()">
                 </div>
                 <div class="filter-group">
                     <label for="filter-tanggal-akhir">Tanggal Akhir:</label>
-                    <input type="date" id="filter-tanggal-akhir">
+                    <input type="date" id="filter-tanggal-akhir" onchange="filterTransaksi()">
                 </div>
             </div>
 
@@ -455,14 +531,22 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             sinkronisasiDataKeuangan();
-            tampilkanRingkasanKeuangan();
-            tampilkanTabelKeuangan();
             
+            // Set nilai default untuk filter bulan dan tahun ke bulan/tahun saat ini
+            document.getElementById('filter-month').value = new Date().toISOString().slice(0, 7);
+            document.getElementById('filter-year').value = new Date().getFullYear();
+            
+            tampilkanRingkasanKeuangan(); // Panggilan awal untuk memuat data default
+            tampilkanTabelKeuangan(); 
+            
+            // Event listener untuk Filter Riwayat Transaksi (Tabel di Bawah)
+            document.getElementById('filter-limit').addEventListener('change', filterTransaksi); 
             document.getElementById('filter-nama').addEventListener('input', filterTransaksi);
             document.getElementById('filter-kategori').addEventListener('change', filterTransaksi);
             document.getElementById('filter-tanggal-mulai').addEventListener('change', filterTransaksi);
             document.getElementById('filter-tanggal-akhir').addEventListener('change', filterTransaksi);
-
+            
+            // Event listener untuk memastikan data di-refresh ketika ada perubahan di halaman lain (misalnya Stok atau Penjualan)
             window.addEventListener('storage', (event) => {
                 if (event.key === 'dataKeuangan' || event.key === 'transaksiHistori' || event.key === 'modalStokBaru') {
                     sinkronisasiDataKeuangan(); 
@@ -489,16 +573,93 @@
             return `${year}-${month}-${day}`;
         }
         
+        function toggleSpecificFilters() {
+            const periodePilihan = document.getElementById('periode-ringkasan').value;
+            const bulanGroup = document.getElementById('bulan-spesifik-group');
+            const tahunGroup = document.getElementById('tahun-spesifik-group');
+
+            bulanGroup.style.display = 'none';
+            tahunGroup.style.display = 'none';
+
+            if (periodePilihan === 'BulanSpesifik') {
+                bulanGroup.style.display = 'flex';
+            } else if (periodePilihan === 'TahunSpesifik') {
+                tahunGroup.style.display = 'flex';
+            }
+            // BUG FIX: Panggilan tampilkanRingkasanKeuangan() hanya terjadi saat tombol "Tampilkan Data" diklik.
+        }
+        
+        function getDatesForPeriod(periode) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let startDate = null;
+            let endDate = null;
+            let display = '';
+
+            function dateToString(date) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            switch (periode) {
+                case 'Hari':
+                    startDate = new Date(today);
+                    endDate = new Date(today);
+                    display = 'Hari Ini';
+                    break;
+                case 'Minggu':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6); 
+                    endDate = new Date(today); 
+                    display = '7 Hari Terakhir';
+                    break;
+                case 'BulanSpesifik':
+                    const monthYear = document.getElementById('filter-month').value; // Format: YYYY-MM
+                    if (!monthYear) {
+                        return { start: null, end: null, display: 'Pilih Bulan...' };
+                    }
+                    const [yearBulan, monthBulan] = monthYear.split('-').map(Number);
+                    
+                    startDate = new Date(yearBulan, monthBulan - 1, 1);
+                    endDate = new Date(yearBulan, monthBulan, 0); 
+                    
+                    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                    display = `${monthNames[monthBulan - 1]} ${yearBulan}`;
+                    break;
+                case 'TahunSpesifik':
+                    const yearTahun = parseInt(document.getElementById('filter-year').value);
+                    if (isNaN(yearTahun)) {
+                        return { start: null, end: null, display: 'Pilih Tahun...' };
+                    }
+                    startDate = new Date(yearTahun, 0, 1);
+                    endDate = new Date(yearTahun, 11, 31);
+                    display = `Tahun ${yearTahun}`;
+                    break;
+                case 'Semua':
+                default:
+                    return { start: null, end: null, display: 'Semua Waktu' };
+            }
+            
+            return { 
+                start: startDate ? dateToString(startDate) : null, 
+                end: endDate ? dateToString(endDate) : null,
+                display: display
+            };
+        }
+
+
         function sinkronisasiDataKeuangan() {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
             let transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
             let modalStokBaru = JSON.parse(localStorage.getItem('modalStokBaru')) || [];
             let isChanged = false;
 
-            // --- 1. SINKRONISASI PENDAPATAN (OMSET) DARI TRANSAKSI HISTORI ---
             const omsetHarian = {};
             let isTransaksiHistoriChanged = false;
             
+            // 1. Sinkronisasi Penjualan (Pendapatan)
             transaksiHistori.forEach(transaksi => {
                 if (!transaksi.isSyncedFinance && transaksi.total > 0) {
                     const tanggal = transaksi.tanggal;
@@ -520,10 +681,9 @@
                 }
             });
 
-            // Hapus entri Pendapatan agregasi lama dari dataKeuangan untuk diganti yang baru
+            // Hapus aggregasi lama sebelum menambahkan yang baru
             dataKeuangan = dataKeuangan.filter(t => t.tipe !== 'Pendapatan' || !t.isAggregated);
 
-            // Tambahkan omset harian yang baru ke dataKeuangan
             for (const key in omsetHarian) {
                 dataKeuangan.push(omsetHarian[key]);
                 isChanged = true;
@@ -533,49 +693,58 @@
                  localStorage.setItem('transaksiHistori', JSON.stringify(transaksiHistori));
             }
 
-            // --- 2. SINKRONISASI MODAL PENJUALAN (HPP) DARI PENAMBAHAN STOK ---
+            // 2. Sinkronisasi Modal Penjualan (HPP/Stok - termasuk input manual dan IMPOR)
             const newModalEntries = [];
-            const processedModalIds = []; 
-
+            dataKeuangan = dataKeuangan.filter(t => !t.isStok); // Hapus entri stok lama
+            
             modalStokBaru.forEach(modal => {
-                const isDuplicate = dataKeuangan.some(t => t.idRef === modal.idRef);
-                if (!isDuplicate) {
-                    const modalTransaksi = {
-                        tanggal: modal.tanggal,
-                        deskripsi: `Modal Pembelian Bahan: ${modal.nama}`,
-                        tipe: 'Modal Penjualan', 
-                        jumlah: modal.jumlah,
-                        idRef: modal.idRef,
-                        isStok: true // 🌟 Tambahkan penanda ini untuk membedakan
-                    };
-                    newModalEntries.push(modalTransaksi);
-                    processedModalIds.push(modal.idRef);
-                    isChanged = true;
-                }
+                // Pastikan setiap entri stok dari stok.html masuk sebagai HPP
+                const modalTransaksi = {
+                    tanggal: modal.tanggal,
+                    deskripsi: `Modal Pembelian Bahan: ${modal.nama}`,
+                    tipe: 'Modal Penjualan', 
+                    jumlah: modal.jumlah,
+                    idRef: modal.idRef,
+                    isStok: true 
+                };
+                newModalEntries.push(modalTransaksi);
+                isChanged = true;
             });
             
             if (newModalEntries.length > 0) {
                 dataKeuangan.push(...newModalEntries);
             }
             
-            // --- 3. PERBARUI LOCAL STORAGE JIKA ADA PERUBAHAN ---
             if (isChanged) {
                 localStorage.setItem('dataKeuangan', JSON.stringify(dataKeuangan));
-                
-                const remainingModalStokBaru = modalStokBaru.filter(m => !processedModalIds.includes(m.idRef));
-                localStorage.setItem('modalStokBaru', JSON.stringify(remainingModalStokBaru));
             }
         }
 
         function tampilkanRingkasanKeuangan() {
             sinkronisasiDataKeuangan(); 
+            const periodePilihan = document.getElementById('periode-ringkasan').value;
             const dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
             
+            // 1. Filter Data Berdasarkan Periode
+            const { start, end, display } = getDatesForPeriod(periodePilihan);
+            document.getElementById('periode-display-info').textContent = `Ringkasan: ${display}`;
+
+            const dataTerfilter = dataKeuangan.filter(transaksi => {
+                if (periodePilihan === 'Semua') return true;
+                
+                const transaksiDateString = transaksi.tanggal; 
+                const isAfterStart = !start || transaksiDateString >= start;
+                const isBeforeEnd = !end || transaksiDateString <= end;
+                
+                return isAfterStart && isBeforeEnd;
+            });
+
+            // 2. Hitung Total dari Data yang Sudah Difilter
             let totalOmset = 0;
             let totalModalPenjualan = 0;
             let totalPengeluaranLain = 0;
 
-            dataKeuangan.forEach(transaksi => {
+            dataTerfilter.forEach(transaksi => {
                 if (transaksi.tipe === 'Pendapatan') {
                     totalOmset += transaksi.jumlah;
                 } else if (transaksi.tipe === 'Modal Penjualan') {
@@ -585,10 +754,22 @@
                 }
             });
             
-            const totalProfit = totalOmset - (totalModalPenjualan + totalPengeluaranLain);
+            const totalPendapatanKotor = totalOmset - totalModalPenjualan;
+            const totalProfit = totalPendapatanKotor - totalPengeluaranLain;
 
+            // 3. Tampilkan Hasil Ringkasan
             document.getElementById('total-omset').textContent = `Rp ${formatRupiah(totalOmset)}`;
             document.getElementById('total-modal-penjualan').textContent = `Rp ${formatRupiah(totalModalPenjualan)}`;
+            
+            const grossProfitElement = document.getElementById('total-pendapatan-kotor');
+            if (totalPendapatanKotor < 0) {
+                grossProfitElement.style.color = 'var(--expense-color)';
+                grossProfitElement.textContent = `(Rp ${formatRupiah(Math.abs(totalPendapatanKotor))})`; 
+            } else {
+                grossProfitElement.style.color = 'var(--gross-profit-color)';
+                grossProfitElement.textContent = `Rp ${formatRupiah(totalPendapatanKotor)}`;
+            }
+            
             document.getElementById('total-pengeluaran-lain').textContent = `Rp ${formatRupiah(totalPengeluaranLain)}`;
             
             const profitElement = document.getElementById('total-profit');
@@ -600,12 +781,18 @@
                  profitElement.style.color = 'var(--profit-color)';
                  profitElement.textContent = `Rp ${formatRupiah(totalProfit)}`;
             }
+
+            // 4. Update Riwayat Transaksi dengan filter periode
+            filterTransaksi(); 
         }
 
         function tampilkanTabelKeuangan(filteredData = null) {
-            const dataKeuangan = filteredData || JSON.parse(localStorage.getItem('dataKeuangan')) || [];
+            let dataKeuangan = filteredData || JSON.parse(localStorage.getItem('dataKeuangan')) || [];
             const tbody = document.getElementById('finance-table-body');
             tbody.innerHTML = '';
+
+            const limitValue = document.getElementById('filter-limit') ? document.getElementById('filter-limit').value : 'All';
+            const limit = limitValue === 'All' ? Infinity : parseInt(limitValue);
             
             if (dataKeuangan.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--light-text); padding: 20px;">Tidak ada riwayat transaksi keuangan yang tercatat.</td></tr>';
@@ -614,7 +801,9 @@
 
             dataKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
-            dataKeuangan.forEach(transaksi => {
+            const limitedData = dataKeuangan.slice(0, limit);
+
+            limitedData.forEach(transaksi => {
                 const row = document.createElement('tr');
                 let colorVar = 'var(--text-color)';
                 let prefix = '';
@@ -632,10 +821,7 @@
 
                 const jumlahFormatted = `<span style="font-weight: 600; color: ${colorVar};">${prefix}Rp ${formatRupiah(transaksi.jumlah)}</span>`;
                 
-                // 🌟 Logika untuk tombol Aksi
                 let actionButtons = '';
-                // Hanya izinkan EDIT/HAPUS untuk transaksi manual (idRef mulai MANUAL) dan modal stok (isStok: true)
-                // TIDAK izinkan edit/hapus untuk Pendapatan (agregasi otomatis)
                 if (transaksi.idRef && (transaksi.idRef.startsWith('MANUAL') || transaksi.isStok)) {
                     actionButtons = `
                         <button class="btn-action btn-edit" onclick="tampilkanModalEdit('${transaksi.idRef}')">
@@ -660,13 +846,29 @@
         }
         
         function filterTransaksi() {
-            const dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
+            const dataKeuanganAwal = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
+            
+            // 1. Terapkan Filter Periode dari Ringkasan (yang dipilih di header-filters)
+            const periodePilihan = document.getElementById('periode-ringkasan').value;
+            const { start: pStart, end: pEnd } = getDatesForPeriod(periodePilihan);
+
+            let dataTerfilter = dataKeuanganAwal.filter(transaksi => {
+                if (periodePilihan === 'Semua') return true;
+                
+                const transaksiDateString = transaksi.tanggal; 
+                const isAfterStart = !pStart || transaksiDateString >= pStart;
+                const isBeforeEnd = !pEnd || transaksiDateString <= pEnd;
+                
+                return isAfterStart && isBeforeEnd;
+            });
+            
+            // 2. Terapkan Filter Tabel (Nama, Kategori, Tanggal Range)
             const namaFilter = document.getElementById('filter-nama').value.toLowerCase();
             const kategoriFilter = document.getElementById('filter-kategori').value;
             const tanggalMulaiFilter = document.getElementById('filter-tanggal-mulai').value;
             const tanggalAkhirFilter = document.getElementById('filter-tanggal-akhir').value;
 
-            const dataTerfilter = dataKeuangan.filter(transaksi => {
+            dataTerfilter = dataTerfilter.filter(transaksi => {
                 const matchNama = transaksi.deskripsi.toLowerCase().includes(namaFilter);
                 const matchKategori = kategoriFilter === "" || transaksi.tipe === kategoriFilter;
 
@@ -679,6 +881,7 @@
                 return matchNama && matchKategori && matchTanggalMulai && matchTanggalAkhir;
             });
 
+            // 3. Tampilkan hasilnya (tampilkanTabelKeuangan akan menangani Limit baris)
             tampilkanTabelKeuangan(dataTerfilter);
         }
         
@@ -710,7 +913,7 @@
                 deskripsi: deskripsi,
                 tipe: kategoriPilihan === 'Pengeluaran Lainnya' ? 'Pengeluaran' : 'Modal Penjualan',
                 jumlah: jumlah,
-                idRef: `MANUAL_${Date.now()}` // 🌟 Penting: ID unik untuk transaksi manual
+                idRef: `MANUAL_${Date.now()}` 
             };
             
             dataKeuangan.push(newExpense);
@@ -723,7 +926,7 @@
         });
 
         // ===========================================
-        // 🌟 FUNGSI EDIT DAN HAPUS RIWAYAT TRANSAKSI 🌟
+        // FUNGSI EDIT DAN HAPUS RIWAYAT TRANSAKSI
         // ===========================================
         
         function tutupModalEdit() {
@@ -739,27 +942,23 @@
                 return;
             }
             
-            // Cek apakah transaksi ini Otomatis (Pendapatan/Omset Agregasi)
             if (transaksi.isAggregated && transaksi.tipe === 'Pendapatan') {
                 alert("Transaksi pendapatan agregasi (otomatis) tidak bisa diedit secara langsung.");
                 return;
             }
 
-            // Isi form modal edit
             document.getElementById('edit-idref').value = idRef;
             document.getElementById('edit-tanggal').value = transaksi.tanggal;
             document.getElementById('edit-deskripsi').value = transaksi.deskripsi;
             document.getElementById('edit-jumlah').value = transaksi.jumlah;
             
             const tipeSelect = document.getElementById('edit-tipe');
-            // Atur tipe yang terpilih
             if (transaksi.tipe === 'Pengeluaran') {
                 tipeSelect.value = 'Pengeluaran';
             } else if (transaksi.tipe === 'Modal Penjualan') {
                 tipeSelect.value = 'Modal Penjualan';
             }
             
-            // Transaksi Stok tidak boleh diubah tipe dan deskripsinya
             if(transaksi.isStok) {
                  document.getElementById('edit-deskripsi').disabled = true;
                  tipeSelect.disabled = true;
@@ -791,13 +990,11 @@
             const index = dataKeuangan.findIndex(t => t.idRef === idRef);
             
             if (index !== -1) {
-                // Pertahankan properti isStok jika ada
                 const isStok = dataKeuangan[index].isStok;
                 
                 dataKeuangan[index].tanggal = tanggalBaru;
                 dataKeuangan[index].jumlah = jumlahBaru;
                 
-                // Hanya ubah deskripsi dan tipe jika bukan transaksi stok (otomatis dari stok.html)
                 if (!isStok) {
                     dataKeuangan[index].deskripsi = deskripsiBaru;
                     dataKeuangan[index].tipe = tipeBaru;
@@ -819,7 +1016,6 @@
 
             if (!transaksi) return;
 
-            // Cek apakah transaksi ini Otomatis (Pendapatan/Omset Agregasi)
             if (transaksi.isAggregated && transaksi.tipe === 'Pendapatan') {
                 alert("Transaksi pendapatan agregasi (otomatis) tidak bisa dihapus. Koreksi dilakukan di data penjualan/stok.");
                 return;
