@@ -378,14 +378,6 @@
                     <label for="harga">Harga Satuan (Otomatis):</label>
                     <input type="text" id="harga" name="harga" readonly placeholder="Rp 0">
                 </div>
-
-                <div class="form-group">
-                    <label for="metodeBayar">Metode Pembayaran:</label>
-                    <select id="metodeBayar" name="metodeBayar" required>
-                        <option value="Tunai" selected>Tunai</option>
-                        <option value="Qris">QRIS</option>
-                    </select>
-                </div>
                 
                 <button type="button" class="btn-add" onclick="tambahItem()"><i class="fas fa-cart-plus"></i> Tambah Pesanan</button>
             </form>
@@ -545,10 +537,10 @@
 
 
             const newItem = {
-                id: Date.now() + Math.random(), // id unik sementara untuk item
+                id: Date.now(), 
                 tanggal,
                 produk: namaProduk, // Nama asli di data
-                namaDisplay: namaUntukStruk, // Nama yang ditampilkan di ringkasan/struk
+                namaDisplay: namaUntukStruk, // Nama yang ditampilkan di struk
                 originalName: originalName, // Nama produk non-promo untuk update stok/laba
                 kuantitas,
                 harga,
@@ -558,7 +550,7 @@
 
             pesanan.push(newItem);
             tampilkanPesanan();
-            // document.getElementById('konfirmasi-box').style.display = 'block'; // Diatur di tampilkanPesanan()
+            // document.getElementById('konfirmasi-box').style.display = 'block'; // Dihapus karena sudah ada di CSS desktop
             resetFormInput();
         }
 
@@ -566,7 +558,6 @@
             const ringkasanDiv = document.getElementById('ringkasan-pesanan');
             ringkasanDiv.innerHTML = '';
             
-            // Tampilkan atau sembunyikan konfirmasi box
             if (pesanan.length === 0) {
                  ringkasanDiv.innerHTML = '<p style="text-align: center; color: #777; margin-top: 20px;">Belum ada item ditambahkan.</p>';
                  // Sembunyikan konfirmasi box di mobile jika pesanan kosong
@@ -582,7 +573,6 @@
             pesanan.forEach(item => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'order-item';
-                // Gunakan item.id sebagai string saat memanggil fungsi
                 itemDiv.innerHTML = `
                     <div class="order-item-info">
                         <strong>${item.namaDisplay || item.produk}</strong>
@@ -599,8 +589,7 @@
         }
 
         function editItem(id) {
-            // Konversi id ke string untuk perbandingan yang konsisten
-            const itemIndex = pesanan.findIndex(item => String(item.id) === id);
+            const itemIndex = pesanan.findIndex(item => item.id == id);
             if (itemIndex > -1) {
                 const item = pesanan[itemIndex];
                 const newKuantitas = prompt(`Masukkan kuantitas baru untuk ${item.namaDisplay || item.produk}:`, item.kuantitas);
@@ -616,8 +605,7 @@
         }
         
         function hapusItem(id) {
-            // Konversi id ke string untuk perbandingan yang konsisten
-            const itemIndex = pesanan.findIndex(item => String(item.id) === id);
+            const itemIndex = pesanan.findIndex(item => item.id == id);
             if (itemIndex > -1) {
                 pesanan.splice(itemIndex, 1);
                 tampilkanPesanan();
@@ -630,13 +618,10 @@
                 return;
             }
 
-            const metodeBayar = document.getElementById('metodeBayar').value;
-
             const transaksiId = Date.now();
             const newTransaksi = {
                 id: transaksiId,
                 tanggal: document.getElementById('tanggal').value,
-                metodeBayar: metodeBayar, // Tambahkan metode pembayaran
                 items: pesanan,
                 total: pesanan.reduce((sum, item) => sum + item.total, 0),
                 labaKotor: pesanan.reduce((sum, item) => sum + (item.total - (item.kuantitas * item.hargaModal)), 0),
@@ -647,7 +632,6 @@
             localStorage.setItem('transaksiHistori', JSON.stringify(transaksiHistori));
 
             // Cek dan kurangi stok bahan mentah/stok utama
-            let isStokChanged = false;
             pesanan.forEach(item => {
                  let produkStok;
                  if (item.originalName && item.originalName !== item.produk) {
@@ -662,7 +646,6 @@
                      // Kurangi stok jika produk adalah barang dagangan (non-produksi/tanpa resep)
                      if (!produkStok.bahanMentah || produkStok.bahanMentah.length === 0) {
                           produkStok.stok = (produkStok.stok || 0) - item.kuantitas;
-                          isStokChanged = true;
                      } 
                      // Kurangi stok bahan mentah jika produk memiliki resep
                      if (produkStok.bahanMentah && produkStok.bahanMentah.length > 0) {
@@ -670,16 +653,12 @@
                                const bahanStok = daftarProduk.find(p => p.nama === bahan.nama && p.isBahanMentah);
                                if (bahanStok) {
                                    bahanStok.stok = (bahanStok.stok || 0) - (bahan.kuantitas * item.kuantitas);
-                                   isStokChanged = true;
                                }
                           });
                      }
                  }
             });
-            
-            if (isStokChanged) {
-                localStorage.setItem('daftarStok', JSON.stringify(daftarProduk));
-            }
+            localStorage.setItem('daftarStok', JSON.stringify(daftarProduk));
 
 
             alert("Penjualan berhasil dikonfirmasi!");
@@ -687,13 +666,12 @@
             // Tampilkan struk modal secara otomatis setelah konfirmasi
             tampilkanStrukModal(transaksiId);
             
-            // Panggil reset form setelah tampilkanStrukModal karena strukModal menggunakan variabel pesanan
-            resetForm(); 
+            resetForm();
             tampilkanTransaksiTerbaru();
         }
         
         function resetForm() {
-            // Biarkan tanggal dan metode bayar tetap
+            // Biarkan tanggal tetap
             // document.getElementById('tanggal').valueAsDate = new Date();
             document.getElementById('ringkasan-pesanan').innerHTML = '<p style="text-align: center; color: #777; margin-top: 20px;">Belum ada item ditambahkan.</p>';
             document.getElementById('konfirmasi-box').style.display = 'none';
@@ -725,7 +703,7 @@
                 transaksiDiv.className = 'transaction-item';
                 transaksiDiv.innerHTML = `
                     <div class="transaction-info">
-                        <strong>Tanggal:</strong> ${transaksi.tanggal} (${transaksi.metodeBayar})<br>
+                        <strong>Tanggal:</strong> ${transaksi.tanggal}<br>
                         <strong>Total:</strong> ${formatRupiah(transaksi.total)}
                         <span style="display: block; font-size: 0.85em; color: var(--secondary-color);">Laba Kotor: ${formatRupiah(transaksi.labaKotor || 0)}</span>
                     </div>
@@ -749,7 +727,6 @@ ${alamatToko.padStart(32 + Math.floor((32 - alamatToko.length) / 2), ' ').padEnd
 --------------------------------
 Tanggal: ${transaksi.tanggal} ${new Date(transaksi.id).toLocaleTimeString('id-ID')}
 ID Transaksi: ${transaksi.id}
-Pembayaran: ${transaksi.metodeBayar.toUpperCase()}
 --------------------------------
 
 `;
@@ -798,10 +775,8 @@ Terima Kasih Atas Kunjungan Anda!
         }
 
         function updateStrukPreview() {
-            if (transaksiUntukStruk) {
-                 const strukPreview = document.getElementById('struk-preview');
-                 strukPreview.value = buatIsiStruk(transaksiUntukStruk);
-            }
+            const strukPreview = document.getElementById('struk-preview');
+            strukPreview.value = buatIsiStruk(transaksiUntukStruk);
         }
 
         function tutupStrukModal() {
