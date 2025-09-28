@@ -215,7 +215,7 @@
                         <tr>
                             <th>ID Transaksi</th>
                             <th>Tanggal</th>
-                            <th>Metode Bayar</th> <th>Item</th>
+                            <th>Item</th>
                             <th>Kuantitas</th>
                             <th>Harga Satuan</th>
                             <th>Total</th>
@@ -272,8 +272,7 @@
             let totalPenjualanHariIni = 0;
 
             if (penjualanHariIni.length === 0) {
-                // Kolom colspan menjadi 7
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #6c757d; font-style: italic; padding: 20px;">Belum ada transaksi yang tercatat hari ini.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6c757d; font-style: italic; padding: 20px;">Belum ada transaksi yang tercatat hari ini.</td></tr>';
                 document.getElementById('total-penjualan-hari-ini').textContent = formatRupiah(0);
                 return;
             }
@@ -281,9 +280,6 @@
             penjualanHariIni.forEach(transaksi => {
                 totalPenjualanHariIni += transaksi.total;
                 
-                // Ambil metode pembayaran, default ke 'Tunai' jika tidak ada (untuk kompatibilitas data lama)
-                const metodeBayar = transaksi.metodeBayar || 'Tunai'; 
-
                 // Iterasi per item di dalam transaksi
                 transaksi.items.forEach(item => {
                     const row = document.createElement('tr');
@@ -294,7 +290,7 @@
                     row.innerHTML = `
                         <td>${transaksi.id}</td>
                         <td>${transaksi.tanggal}</td>
-                        <td><strong>${metodeBayar}</strong></td> <td>${item.produk}</td>
+                        <td>${item.produk}</td>
                         <td>${item.kuantitas}</td>
                         <td>${formatRupiah(item.harga)}</td>
                         <td>${formatRupiah(totalItem)}</td>
