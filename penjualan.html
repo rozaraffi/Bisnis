@@ -12,7 +12,7 @@
         :root {
             --primary-color: #007bff; /* Biru */
             --primary-dark: #0056b3;
-            --secondary-color: #28a745; /* Hijau (Warna Keuntungan/Sukses) */
+            --secondary-color: #28a745; /* Hijau */
             --background-light: #f8f9fa;
             --card-background: #ffffff;
             --text-color: #343a40;
@@ -20,7 +20,6 @@
             --shadow-color: rgba(0, 0, 0, 0.1);
             --danger-color: #dc3545;
             --info-color: #17a2b8;
-            --warning-color: #ffc107; /* Kuning/Warning untuk Payment */
         }
 
         body {
@@ -154,24 +153,18 @@
         /* --- Kartu Ringkasan dan Top 10 --- */
         .analytics-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* Membagi menjadi tiga kolom */
-            gap: 20px; /* Kurangi gap sedikit */
+            grid-template-columns: 1fr 1fr; /* Membagi menjadi dua kolom */
+            gap: 30px;
             margin-bottom: 30px;
         }
 
-        @media (max-width: 1100px) {
+        @media (max-width: 900px) {
             .analytics-grid {
-                grid-template-columns: 1fr 1fr; /* Dua kolom di tablet */
-            }
-        }
-        @media (max-width: 768px) {
-            .analytics-grid {
-                grid-template-columns: 1fr; /* Satu kolom di HP */
-                gap: 20px;
+                grid-template-columns: 1fr;
             }
         }
 
-        .summary-card, .payment-summary-card, .top-sellers-card {
+        .summary-card, .top-sellers-card {
             background-color: var(--card-background);
             padding: 25px;
             border-radius: 10px;
@@ -181,66 +174,27 @@
             display: flex;
             flex-direction: column;
         }
-        
-        /* Gaya Kartu Total Penjualan */
+
         .summary-card {
-            border-left: 5px solid var(--primary-color);
+            border-left: 5px solid var(--primary-color); /* Aksen warna */
         }
+
+        .summary-card .label {
+            font-weight: 500;
+            font-size: 1em;
+            color: #6c757d;
+        }
+
         .summary-card .value {
             font-size: 2.5em;
             font-weight: 700;
             margin-top: 5px;
-            color: var(--danger-color); 
+            color: var(--danger-color); /* Gunakan warna yang menonjol untuk nilai uang */
         }
-
-        /* Gaya Kartu Payment Summary */
-        .payment-summary-card {
-             border-left: 5px solid var(--warning-color);
-        }
-        .payment-summary-card h2 {
-            border-bottom-color: var(--warning-color);
-        }
-        .payment-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            flex-grow: 1;
-        }
-        .payment-list li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px dashed var(--border-color);
-        }
-        .payment-list li:last-child {
-            border-bottom: none;
-        }
-        .payment-name {
-            font-weight: 600;
-            color: var(--text-color);
-            font-size: 1em;
-            flex-grow: 1;
-        }
-        .payment-count {
-            font-weight: 700;
-            color: var(--warning-color);
-            margin-right: 10px;
-        }
-        /* PERUBAHAN CSS UNTUK PERSENTASE PEMBAYARAN */
-        .payment-percentage {
-            font-weight: 600;
-            color: var(--secondary-color); /* Menggunakan warna hijau keuntungan */
-            font-size: 0.9em;
-        }
-
 
         /* Gaya Top 10 */
         .top-sellers-card {
             border-left: 5px solid var(--secondary-color);
-        }
-        .top-sellers-card h2 {
-            border-bottom-color: var(--secondary-color);
         }
 
         .top-sellers-list {
@@ -283,14 +237,6 @@
             font-weight: 600;
             color: var(--primary-dark);
             font-size: 1em;
-            margin-left: 10px; /* Jarak dari persentase */
-        }
-        
-        /* PERUBAHAN CSS UNTUK PERSENTASE PRODUK */
-        .product-percentage {
-            font-weight: 600;
-            color: var(--secondary-color); /* Menggunakan warna hijau keuntungan */
-            font-size: 0.9em;
         }
 
         /* --- Tabel Data --- */
@@ -309,7 +255,7 @@
 
         table {
             width: 100%;
-            border-collapse: separate;
+            border-collapse: separate; /* Ubah ke separate untuk border radius */
             border-spacing: 0;
             text-align: left;
         }
@@ -426,13 +372,6 @@
                 <div class="label" id="summary-label">Total Penjualan (Semua Data)</div>
                 <div class="value" id="total-penjualan">Rp 0</div>
             </div>
-
-            <div class="payment-summary-card">
-                <h2><i class="fas fa-wallet"></i> Metode Pembayaran</h2>
-                <ul class="payment-list" id="payment-list">
-                    <li>Tidak ada data pembayaran.</li>
-                </ul>
-            </div>
             
             <div class="top-sellers-card">
                 <h2><i class="fas fa-trophy"></i> Top 10 Produk Bestseller</h2>
@@ -490,6 +429,7 @@
             } else if (filterType === 'yearly') {
                 document.getElementById('year-input-group').style.display = 'flex';
             }
+            // FilterData dipanggil setelah tombol filter diklik, bukan di sini
         }
 
         function filterData() {
@@ -499,7 +439,6 @@
 
             const summaryLabel = document.getElementById('summary-label');
 
-            // Logika Filter Data
             if (filterType === 'daily') {
                 const filterDate = document.getElementById('filter-date').value;
                 if (!filterDate) {
@@ -509,6 +448,7 @@
                 filteredData = transaksiHistori.filter(t => t.tanggal === filterDate);
                 summaryLabel.textContent = `Total Penjualan Tanggal ${new Date(filterDate).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             } else if (filterType === 'weekly') {
+                // Filter mingguan - PERHATIAN: LOGIKA SEDERHANA HANYA MEMPERINGATKAN
                 alert('Filter mingguan belum sepenuhnya diimplementasikan. Harap gunakan filter Harian, Bulanan, atau Tahunan.');
                 document.getElementById('filter-type').value = 'all';
                 filteredData = transaksiHistori;
@@ -537,8 +477,7 @@
             }
             
             renderTable(filteredData);
-            calculateTopSellers(filteredData);
-            calculatePaymentMethods(filteredData); 
+            calculateTopSellers(filteredData); // Panggil fungsi Top Sellers
         }
 
         function searchData() {
@@ -552,7 +491,7 @@
 
             const searchResults = transaksiHistori.filter(t => {
                 // 1. Cari berdasarkan ID Transaksi
-                if (String(t.id).includes(searchQuery)) {
+                if (t.id.toString().includes(searchQuery)) {
                     return true;
                 }
                 // 2. Cari berdasarkan nama produk di dalam transaksi
@@ -566,8 +505,7 @@
             document.getElementById('summary-label').textContent = `Hasil Pencarian untuk "${searchQuery}"`;
             
             renderTable(searchResults);
-            calculateTopSellers(searchResults);
-            calculatePaymentMethods(searchResults); 
+            calculateTopSellers(searchResults); // Panggil fungsi Top Sellers
         }
 
         function renderTable(data) {
@@ -600,94 +538,52 @@
             document.getElementById('total-penjualan').textContent = formatRupiah(totalPenjualan);
         }
         
-        // FUNGSI UNTUK MENGHITUNG METODE PEMBAYARAN
-        function calculatePaymentMethods(data) {
-            const paymentCounts = {};
-            let totalTransactions = data.length;
-            const ul = document.getElementById('payment-list');
-            ul.innerHTML = '';
+        // FUNGSI BARU UNTUK MENGHITUNG DAN MENAMPILKAN TOP 10
+        function calculateTopSellers(data) {
+            const productSales = {}; // { 'Nama Produk': Jumlah Kuantitas Terjual }
 
-            if (totalTransactions === 0) {
-                ul.innerHTML = '<li>Tidak ada data pembayaran.</li>';
-                return;
-            }
-
-            // 1. Hitung Jumlah Transaksi per Metode
+            // 1. Agregasi Penjualan Produk dari Semua Transaksi yang Difilter
             data.forEach(transaksi => {
-                // Default ke 'Tunai' jika data lama tidak punya metodeBayar
-                const method = transaksi.metodeBayar || 'Tunai'; 
-                paymentCounts[method] = (paymentCounts[method] || 0) + 1;
+                transaksi.items.forEach(item => {
+                    // Gunakan namaDisplay jika ada, jika tidak, gunakan produk
+                    const productName = item.namaDisplay || item.produk;
+                    
+                    if (productSales[productName]) {
+                        productSales[productName] += item.kuantitas;
+                    } else {
+                        productSales[productName] = item.kuantitas;
+                    }
+                });
             });
 
             // 2. Konversi ke array dan sort (Urutkan)
-            const sortedPayments = Object.keys(paymentCounts).map(name => ({
+            const sortedSellers = Object.keys(productSales).map(name => ({
                 name: name,
-                count: paymentCounts[name],
-                percentage: (paymentCounts[name] / totalTransactions) * 100 
+                quantity: productSales[name]
             }))
-            .sort((a, b) => b.count - a.count); // Urutkan dari jumlah terbanyak
+            .sort((a, b) => b.quantity - a.quantity) // Urutkan dari kuantitas terbanyak
+            .slice(0, 10); // Ambil hanya 10 teratas
 
             // 3. Render ke HTML
-            sortedPayments.forEach(item => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span class="payment-name">${item.name}</span>
-                    <span class="payment-count">${item.count} transaksi</span>
-                    <span class="payment-percentage">${item.percentage.toFixed(1)}%</span>
-                `;
-                ul.appendChild(li);
-            });
-        }
-
-
-        // FUNGSI UNTUK MENGHITUNG DAN MENAMPILKAN TOP 10 (DIUBAH UNTUK PERSENTASE)
-        function calculateTopSellers(data) {
-            const productSales = {}; // { 'Nama Produk': Jumlah Kuantitas Terjual }
-            let totalQuantitySold = 0;
             const ul = document.getElementById('top-sellers-list');
             ul.innerHTML = '';
 
-            // 1. Agregasi Penjualan Produk dan Hitung Total Kuantitas Terjual
-            data.forEach(transaksi => {
-                transaksi.items.forEach(item => {
-                    const productName = item.namaDisplay || item.produk;
-                    const qty = item.kuantitas;
-
-                    if (productSales[productName]) {
-                        productSales[productName] += qty;
-                    } else {
-                        productSales[productName] = qty;
-                    }
-                    totalQuantitySold += qty;
-                });
-            });
-            
-            if (totalQuantitySold === 0) {
-                 ul.innerHTML = '<li>Tidak ada data produk bestseller.</li>';
-                 return;
+            if (sortedSellers.length === 0) {
+                ul.innerHTML = '<li>Tidak ada data produk bestseller.</li>';
+                return;
             }
 
-            // 2. Konversi ke array, hitung persentase, dan sort (Urutkan)
-            const sortedSellers = Object.keys(productSales).map(name => ({
-                name: name,
-                quantity: productSales[name],
-                percentage: (productSales[name] / totalQuantitySold) * 100 // Hitung Persentase
-            }))
-            .sort((a, b) => b.quantity - a.quantity)
-            .slice(0, 10);
-
-            // 3. Render ke HTML
             sortedSellers.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <span class="product-rank">${index + 1}</span>
                     <span class="product-name">${item.name}</span>
-                    <span class="product-percentage">${item.percentage.toFixed(1)}%</span>
                     <span class="product-quantity">${item.quantity} unit</span>
                 `;
                 ul.appendChild(li);
             });
         }
+        // AKHIR FUNGSI BARU
 
         function tampilkanDetail(id) {
             const transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
@@ -702,7 +598,6 @@
                 =================================
                 DETAIL TRANSAKSI ID: ${transaksi.id}
                 Tanggal: ${transaksi.tanggal}
-                Pembayaran: ${transaksi.metodeBayar || 'Tunai'}
                 ---------------------------------
                 
                 ITEM PENJUALAN:
