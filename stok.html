@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Stok</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* [STYLES TETAP SAMA SEPERTI ASLINYA] */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
@@ -413,6 +415,23 @@
             <h1>Manajemen Stok</h1>
         </div>
         
+        <div class="data-table-container" style="margin-bottom: 30px;">
+            <div class="table-header">
+                <h2>Alat Data <i class="fas fa-database"></i></h2>
+            </div>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                <button class="btn" onclick="document.getElementById('file-input-transaksi').click()"><i class="fas fa-file-import"></i> Impor Transaksi Kulakan (.csv)</button>
+                <input type="file" id="file-input-transaksi" accept=".csv" style="display: none;" onchange="handleImportTransaksi(event)">
+                
+                <button class="btn btn-secondary" onclick="exportDataUntukKaryawan()"><i class="fas fa-clipboard-list"></i> Ekspor Data untuk Karyawan (.csv)</button> 
+            </div>
+            <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                 <button class="btn" style="background-color: #17a2b8;" onclick="document.getElementById('file-input-full').click()"><i class="fas fa-file-import"></i> Impor Data Stok Penuh (.json)</button>
+                 <input type="file" id="file-input-full" accept=".json" style="display: none;" onchange="handleImportFull(event)">
+                 <button class="btn btn-secondary" style="background-color: #17a2b8;" onclick="exportFullData()"><i class="fas fa-file-export"></i> Ekspor Data Stok Penuh (.json)</button>
+            </div>
+        </div>
         <div class="data-table-container">
             <div class="table-header">
                 <h2>Produk Jadi <i class="fas fa-box-open"></i></h2>
@@ -980,7 +999,7 @@
                 tampilkanTransaksiStok(); 
 
                 await customAlert(
-                    `Transaksi stok '${transaksi.nama}' berhasil dihapus. \n\n**Perubahan Stok**: ${formatAngka(stokLama)} $\\rightarrow$ ${formatAngka(bahanStok.stok)} \n**Harga Modal**: Rp ${formatRupiah(hargaModalLama)} $\\rightarrow$ Rp ${formatRupiah(bahanStok.hargaBeli)}`, 
+                    `Transaksi stok '${transaksi.nama}' berhasil dihapus. \n\n**Perubahan Stok**: ${formatAngka(stokLama)} → ${formatAngka(bahanStok.stok)} \n**Harga Modal**: Rp ${formatRupiah(hargaModalLama)} → Rp ${formatRupiah(bahanStok.hargaBeli)}`, 
                     "Penghapusan Berhasil!"
                 );
             }
@@ -1458,6 +1477,266 @@
                     await customAlert("Stok berhasil dihapus.", "Berhasil!");
                 }
             }
+        }
+        
+        // ===========================================
+        // FUNGIONALITAS IMPOR/EKSPOR DATA 
+        // ===========================================
+
+        /**
+         * 1. IMPOR TRANSAKSI KULAKAN (CSV dari Karyawan)
+         */
+
+        async function handleImportTransaksi(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const konfirmasi = await customConfirm(
+                "Anda yakin ingin mengimpor transaksi kulakan? Ini akan **menambah** stok, menghitung ulang modal rata-rata, dan mencatat HPP.",
+                "Konfirmasi Impor Transaksi Kulakan"
+            );
+
+            if (!konfirmasi) {
+                document.getElementById('file-input-transaksi').value = ''; // Reset input file
+                return;
+            }
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async function(results) {
+                    let importedCount = 0;
+                    const errors = [];
+                    
+                    // Kolom yang diharapkan
+                    const expectedHeaders = ['Nama Bahan', 'Jumlah Tambah', 'Total Biaya Beli'];
+                    const hasHeaders = expectedHeaders.every(h => results.meta.fields.includes(h));
+
+                    if (!hasHeaders) {
+                         await customAlert("File CSV tidak memiliki kolom wajib: 'Nama Bahan', 'Jumlah Tambah', dan 'Total Biaya Beli'. Impor dibatalkan.", "Gagal Impor!");
+                         return;
+                    }
+
+                    for (const row of results.data) {
+                        const nama = row['Nama Bahan'] ? row['Nama Bahan'].trim() : null;
+                        
+                        // Membersihkan input angka (mengganti koma dengan titik dan menghapus karakter non-angka/titik)
+                        const jumlahStr = row['Jumlah Tambah'] ? row['Jumlah Tambah'].replace(/,/g, '.') : '0';
+                        const biayaStr = row['Total Biaya Beli'] ? row['Total Biaya Beli'].replace(/,/g, '.') : '0';
+                        
+                        const jumlah = parseFloat(jumlahStr);
+                        const biaya = parseFloat(biayaStr);
+                        
+                        if (!nama || isNaN(jumlah) || jumlah <= 0 || isNaN(biaya) || biaya < 0) {
+                            errors.push(`Baris Gagal: Nama: ${nama}, Jumlah: ${jumlahStr}, Biaya: ${biayaStr} (Data tidak valid)`);
+                            continue;
+                        }
+
+                        // Cek atau buat bahan mentah
+                        let produk = daftarStok.find(p => p.nama.toLowerCase() === nama.toLowerCase());
+
+                        if (!produk) {
+                            // Tambahkan otomatis jika belum ada, karena ini data kulakan
+                            produk = {
+                                nama: nama,
+                                stok: 0,
+                                hargaBeli: 0,
+                                isBahanMentah: true,
+                                bahanMentah: []
+                            };
+                            daftarStok.push(produk);
+                        } else if (!produk.isBahanMentah) {
+                             errors.push(`Baris Gagal: ${nama} adalah Produk Jadi, bukan Bahan Mentah.`);
+                             continue;
+                        }
+                        
+                        // === Logika Perhitungan Rata-rata Tertimbang ===
+                        const totalNilaiLama = produk.stok * (produk.hargaBeli || 0);
+                        const stokTotalBaru = produk.stok + jumlah;
+                        
+                        // Perhitungan harga modal rata-rata yang baru
+                        produk.stok = stokTotalBaru;
+                        produk.hargaBeli = stokTotalBaru > 0 ? (totalNilaiLama + biaya) / stokTotalBaru : 0;
+                        
+                        // Catat HPP dan Histori Stok
+                        if (biaya > 0) {
+                             catatModalPenambahanStok(nama, biaya); // Mencatat HPP
+                             catatTransaksiStok(nama, jumlah, biaya, produk.hargaBeli, produk.stok); // Mencatat histori lokal
+                        }
+                        importedCount++;
+                    }
+                    
+                    localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                    tampilkanDaftarStok();
+                    
+                    let message = `✅ Berhasil mengimpor ${importedCount} transaksi kulakan.`;
+                    if (errors.length > 0) {
+                        message += `\n\n⚠️ Terdapat ${errors.length} baris yang gagal diimpor. Lihat console log untuk detail kesalahan.`;
+                        console.error("Detail Kesalahan Impor Transaksi:", errors);
+                    }
+                    await customAlert(message, "Impor Selesai");
+                },
+                error: function(error) {
+                    customAlert(`Gagal membaca file: ${error.message}`, "Error!");
+                }
+            });
+            document.getElementById('file-input-transaksi').value = ''; // Reset input
+        }
+
+
+        /**
+         * 2. EKSPOR DATA UNTUK KARYAWAN (BARU - Tanpa Harga Modal)
+         */
+        function exportDataUntukKaryawan() {
+            if (daftarStok.length === 0) {
+                customAlert("Tidak ada data stok untuk diekspor.");
+                return;
+            }
+
+            const dataExport = [];
+            
+            daftarStok.forEach(produk => {
+                let saran = 'N/A';
+                let stokSaatIni = formatAngka(produk.stok); 
+
+                if (!produk.isBahanMentah) {
+                    // --- Proses Produk Jadi ---
+                    const stokOtomatis = hitungStokProdukJadi(produk);
+                    stokSaatIni = formatAngka(stokOtomatis);
+                    const TARGET_PRODUKSI = produk.targetStokMinimal || 10; 
+                    
+                    let saranList = [];
+                    let butuhBahan = false;
+
+                    if (produk.bahanMentah && produk.bahanMentah.length > 0) {
+                        produk.bahanMentah.forEach(bahan => {
+                            const bahanStok = daftarStok.find(p => p.nama === bahan.nama);
+                            const stokTersedia = bahanStok ? bahanStok.stok : 0;
+                            const jumlahDibutuhkan = bahan.kuantitas;
+                            
+                            // Hitung unit yang bisa dibuat dari bahan ini
+                            const unitBisaDibuat = (jumlahDibutuhkan > 0) ? Math.floor(stokTersedia / jumlahDibutuhkan) : Infinity;
+                            
+                            if (unitBisaDibuat < TARGET_PRODUKSI) {
+                                const perluDitambah = (TARGET_PRODUKSI * jumlahDibutuhkan) - stokTersedia;
+                                if (perluDitambah > 0) {
+                                    saranList.push(`${bahan.nama}: Tambah ${formatAngka(perluDitambah)}`);
+                                    butuhBahan = true;
+                                }
+                            }
+                        });
+                        
+                        if (butuhBahan) {
+                            saran = `KURANG! Untuk ${TARGET_PRODUKSI} unit, butuh: ${saranList.join(' | ')}`;
+                        } else {
+                            saran = `Cukup untuk ${TARGET_PRODUKSI} unit.`;
+                        }
+                    } else {
+                        // Produk Jadi (Barang Dagangan Manual)
+                        const limitRendah = produk.targetStokMinimal || 10;
+                        if (produk.stok < limitRendah) {
+                             saran = `Stok Rendah. Tambah Hingga ${limitRendah} unit.`;
+                        } else {
+                             saran = `Stok Cukup.`;
+                        }
+                    }
+
+                } else {
+                    // --- Proses Bahan Mentah ---
+                    const limitRendah = 20; 
+                    if (produk.stok < limitRendah) {
+                        saran = `Stok Rendah. Segera Kulakan!`;
+                    } else {
+                        saran = `Stok Aman.`;
+                    }
+                }
+
+
+                dataExport.push({
+                    "Nama Produk/Bahan": produk.nama,
+                    "Tipe": produk.isBahanMentah ? "Bahan Mentah" : "Produk Jadi",
+                    "Stok Tersedia Saat Ini": stokSaatIni,
+                    "Saran & Status Stok": saran
+                });
+            });
+
+            const csv = Papa.unparse(dataExport, {
+                quotes: true,
+                delimiter: ",",
+                header: true
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Data_Stok_Karyawan_${dapatkanTanggalHariIni()}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            customAlert("Data Stok untuk Karyawan berhasil diekspor (tanpa harga modal).", "Ekspor Berhasil");
+        }
+
+
+        /**
+         * 3. IMPOR & EKSPOR DATA STOK PENUH (Admin)
+         */
+        function exportFullData() {
+            if (daftarStok.length === 0) {
+                customAlert("Tidak ada data stok untuk diekspor.");
+                return;
+            }
+            
+            // Ekspor seluruh array daftarStok dalam format JSON
+            const dataString = JSON.stringify(daftarStok, null, 2);
+            
+            const blob = new Blob([dataString], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Data_Stok_Penuh_${dapatkanTanggalHariIni()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            customAlert("Data Stok Penuh (Produk & Resep) berhasil diekspor sebagai JSON.", "Ekspor Berhasil");
+        }
+
+        function handleImportFull(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+
+                    if (!Array.isArray(importedData) || importedData.length === 0 || !importedData[0].hasOwnProperty('nama')) {
+                        await customAlert("Struktur file JSON tidak valid. Pastikan ini adalah file Data Stok Penuh yang benar.", "Gagal Impor");
+                        return;
+                    }
+
+                    const konfirmasi = await customConfirm(
+                        "Anda yakin ingin mengimpor Data Stok Penuh? Ini akan **MENIMPA** semua Produk, Resep, Stok, dan Harga Modal rata-rata yang ada saat ini!",
+                        "Konfirmasi Impor Penuh"
+                    );
+
+                    if (konfirmasi) {
+                        daftarStok = importedData;
+                        localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                        
+                        // Hapus histori transaksi stok dan HPP karena data penuh biasanya mencakup kondisi stok akhir
+                        localStorage.removeItem('stokHistori'); 
+                        
+                        tampilkanDaftarStok();
+                        tampilkanTransaksiStok();
+                        await customAlert("Data Stok Penuh berhasil diimpor dan menimpa data lama.", "Berhasil!");
+                    }
+                } catch (error) {
+                    await customAlert(`Gagal memproses file JSON: ${error.message}`, "Error!");
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+            document.getElementById('file-input-full').value = ''; // Reset input
         }
     </script>
 </body>
