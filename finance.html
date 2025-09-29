@@ -758,6 +758,8 @@
         /**
          * FUNGSI PENTING: MENSINKRONISASI DATA PENJUALAN (Omset) dan Modal Stok
          * dari sumber-sumber lain ke dalam dataKeuangan
+         * * DIPERBAIKI: Penanganan nilai numerik yang aman (kuantitas dan hargaBeli) 
+         * saat menghitung HPP untuk mencegah nilai 0 yang tidak terduga.
          */
         function sinkronisasiDataKeuangan() {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -811,32 +813,36 @@
             }
 
             // 2. Sinkronisasi Modal Penjualan (HPP/Stok - dari sumber stok)
-            let modalStokRefs = modalStokBaru.map(m => m.idRef);
-
-            // Hapus entri stok lama yang sudah tidak ada di modalStokBaru
-            dataKeuangan = dataKeuangan.filter(t => !t.isStok || modalStokRefs.includes(t.idRef));
+            
+            // Hapus SEMUA entri stok lama dari dataKeuangan SEBELUM ditambahkan ulang.
+            const initialStokCount = dataKeuangan.filter(t => t.isStok).length;
+            dataKeuangan = dataKeuangan.filter(t => !t.isStok);
+            if (dataKeuangan.filter(t => t.isStok).length !== initialStokCount) {
+                isChanged = true;
+            }
 
             modalStokBaru.forEach(modal => {
                 const idRef = modal.idRef;
-                const existingIndex = dataKeuangan.findIndex(t => t.idRef === idRef && t.isStok);
                 
+                // --- PERBAIKAN BUG HPP: Memastikan nilai numerik yang valid ---
+                // Gunakan parseFloat dan default ke 0 jika nilai tidak valid
+                const hargaBeli = parseFloat(modal.hargaBeli) || 0;
+                // Kuantitas default 1 jika tidak ada, untuk mencegah HPP 0 jika hanya kuantitas yang bermasalah
+                const kuantitas = parseFloat(modal.kuantitas) || 1; 
+                const jumlahHPP = hargaBeli * kuantitas;
+
                 const modalTransaksi = {
                     tanggal: modal.tanggal,
                     deskripsi: `Modal Pembelian Stok: ${modal.nama} (${modal.kuantitas || 'n/a'})`,
                     tipe: 'Modal Penjualan', 
-                    jumlah: modal.hargaBeli * (modal.kuantitas || 1), 
+                    jumlah: jumlahHPP, 
                     idRef: idRef,
                     isStok: true 
                 };
                 
-                if (existingIndex === -1) {
-                    dataKeuangan.push(modalTransaksi);
-                    isChanged = true;
-                } else if (dataKeuangan[existingIndex].jumlah !== modalTransaksi.jumlah || dataKeuangan[existingIndex].tanggal !== modalTransaksi.tanggal) {
-                    // Update jika ada perubahan harga atau kuantitas di Stok
-                    dataKeuangan[existingIndex] = modalTransaksi;
-                    isChanged = true;
-                }
+                // Tambahkan entri stok BARU/TERBARU dari modalStokBaru
+                dataKeuangan.push(modalTransaksi);
+                isChanged = true;
             });
             
             if (isChanged) {
@@ -1046,8 +1052,16 @@
         
         function tutupModalEdit() {
             document.getElementById('editModal').style.display = 'none';
+            // Pastikan input kembali diaktifkan setelah modal ditutup
+            document.getElementById('edit-tanggal').disabled = false;
+            document.getElementById('edit-deskripsi').disabled = false;
+            document.getElementById('edit-jumlah').disabled = false;
+            document.getElementById('edit-tipe').disabled = false;
         }
 
+        /**
+         * DIPERBAIKI: Mengunci input jika transaksi adalah Stok/Otomatis.
+         */
         function tampilkanModalEdit(idRef) {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
             const transaksi = dataKeuangan.find(t => t.idRef === idRef);
@@ -1074,12 +1088,19 @@
                 tipeSelect.value = 'Modal Penjualan';
             }
             
+            // PENTING: Kontrol apakah input diaktifkan atau tidak
             if(transaksi.isStok) {
+                 // Blokir SEMUA edit untuk transaksi stok (otomatis)
+                 document.getElementById('edit-tanggal').disabled = true;
                  document.getElementById('edit-deskripsi').disabled = true;
+                 document.getElementById('edit-jumlah').disabled = true;
                  tipeSelect.disabled = true;
-                 document.getElementById('edit-tipe-info').textContent = 'Catatan: Transaksi stok hanya bisa diubah JUMLAH dan TANGGALnya.';
+                 document.getElementById('edit-tipe-info').textContent = 'PERINGATAN: Transaksi ini berasal dari Stok. Tidak bisa diubah dari sini.';
             } else {
+                 // Izinkan edit untuk transaksi manual
+                 document.getElementById('edit-tanggal').disabled = false;
                  document.getElementById('edit-deskripsi').disabled = false;
+                 document.getElementById('edit-jumlah').disabled = false;
                  tipeSelect.disabled = false;
                  document.getElementById('edit-tipe-info').textContent = 'Hanya Transaksi Manual/Stok yang bisa di Edit.';
             }
@@ -1087,6 +1108,9 @@
             document.getElementById('editModal').style.display = 'flex';
         }
 
+        /**
+         * DIPERBAIKI: Memblokir proses simpan jika transaksi adalah Stok/Otomatis.
+         */
         function simpanEdit(event) {
             event.preventDefault();
 
@@ -1107,13 +1131,18 @@
             if (index !== -1) {
                 const isStok = dataKeuangan[index].isStok;
                 
+                // PENTING: Blokir simpan jika transaksi adalah Stok
+                if (isStok) {
+                    showNotification("Kesalahan: Transaksi Modal Stok hanya bisa diubah di halaman Stok.", 3000);
+                    tutupModalEdit(); // Tutup dan reset status input
+                    return;
+                }
+                
+                // Hanya transaksi MANUAL yang boleh diubah
                 dataKeuangan[index].tanggal = tanggalBaru;
                 dataKeuangan[index].jumlah = jumlahBaru;
-                
-                if (!isStok) {
-                    dataKeuangan[index].deskripsi = deskripsiBaru;
-                    dataKeuangan[index].tipe = tipeBaru;
-                } 
+                dataKeuangan[index].deskripsi = deskripsiBaru;
+                dataKeuangan[index].tipe = tipeBaru;
                 
                 localStorage.setItem('dataKeuangan', JSON.stringify(dataKeuangan));
                 tutupModalEdit();
@@ -1125,6 +1154,9 @@
             }
         }
 
+        /**
+         * DIPERBAIKI: Memblokir hapus jika transaksi adalah Stok/Otomatis.
+         */
         function hapusTransaksi(idRef) {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
             const transaksi = dataKeuangan.find(t => t.idRef === idRef);
@@ -1141,7 +1173,8 @@
                 return;
             }
 
-            if (confirm(`Anda yakin ingin menghapus transaksi "${transaksi.deskripsi}" senilai Rp ${formatRupiah(transaksi.jumlah)}?`)) {
+            const deskripsiSingkat = transaksi.deskripsi.length > 30 ? transaksi.deskripsi.substring(0, 27) + '...' : transaksi.deskripsi;
+            if (confirm(`Anda yakin ingin menghapus transaksi "${deskripsiSingkat}" senilai Rp ${formatRupiah(transaksi.jumlah)}?`)) {
                 
                 dataKeuangan = dataKeuangan.filter(t => t.idRef !== idRef);
                 localStorage.setItem('dataKeuangan', JSON.stringify(dataKeuangan));
