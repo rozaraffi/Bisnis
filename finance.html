@@ -619,7 +619,8 @@
         // ===========================================
 
         function formatRupiah(angka) {
-            if (isNaN(angka) || angka === null) return '0';
+            // Pastikan angka adalah numerik yang valid atau default ke 0
+            if (isNaN(angka) || angka === null || typeof angka === 'undefined') return '0';
             const num = Math.round(angka); 
             let reverse = num.toString().split('').reverse().join(''),
                 ribuan = reverse.match(/\d{1,3}/g);
@@ -758,8 +759,6 @@
         /**
          * FUNGSI PENTING: MENSINKRONISASI DATA PENJUALAN (Omset) dan Modal Stok
          * dari sumber-sumber lain ke dalam dataKeuangan
-         * * DIPERBAIKI: Penanganan nilai numerik yang aman (kuantitas dan hargaBeli) 
-         * saat menghitung HPP untuk mencegah nilai 0 yang tidak terduga.
          */
         function sinkronisasiDataKeuangan() {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -785,7 +784,8 @@
                         idRef: key 
                     };
                 }
-                omsetHarian[key].jumlah += transaksi.total;
+                // Pastikan jumlah transaksi adalah angka
+                omsetHarian[key].jumlah += parseFloat(transaksi.total) || 0;
                 
                 if (!transaksi.isSyncedFinance) {
                     transaksi.isSyncedFinance = true; 
@@ -794,13 +794,8 @@
             });
 
             // Hapus SEMUA entri 'Pendapatan' yang merupakan hasil Aggregasi LAMA.
-            const initialLength = dataKeuangan.length;
             dataKeuangan = dataKeuangan.filter(t => t.tipe !== 'Pendapatan' || !t.isAggregated);
             
-            if (dataKeuangan.length !== initialLength) {
-                isChanged = true;
-            }
-
             // Tambahkan Aggregasi Pendapatan BARU
             for (const key in omsetHarian) {
                 dataKeuangan.push(omsetHarian[key]);
@@ -815,37 +810,38 @@
             // 2. Sinkronisasi Modal Penjualan (HPP/Stok - dari sumber stok)
             
             // Hapus SEMUA entri stok lama dari dataKeuangan SEBELUM ditambahkan ulang.
-            const initialStokCount = dataKeuangan.filter(t => t.isStok).length;
             dataKeuangan = dataKeuangan.filter(t => !t.isStok);
-            if (dataKeuangan.filter(t => t.isStok).length !== initialStokCount) {
-                isChanged = true;
-            }
 
             modalStokBaru.forEach(modal => {
                 const idRef = modal.idRef;
                 
-                // --- PERBAIKAN BUG HPP: Memastikan nilai numerik yang valid ---
-                // Gunakan parseFloat dan default ke 0 jika nilai tidak valid
-                const hargaBeli = parseFloat(modal.hargaBeli) || 0;
-                // Kuantitas default 1 jika tidak ada, untuk mencegah HPP 0 jika hanya kuantitas yang bermasalah
-                const kuantitas = parseFloat(modal.kuantitas) || 1; 
+                // START PERBAIKAN: Memastikan nilai numerik yang valid
+                // Menggunakan (modal.prop || 0) dan parseFloat ganda untuk keamanan
+                const hargaBeli = parseFloat(modal.hargaBeli || 0) || 0; 
+                const kuantitas = parseFloat(modal.kuantitas || 0) || 0; 
+                // END PERBAIKAN
+                
+                // Perkalian yang seharusnya (Harga Beli Satuan x Kuantitas)
                 const jumlahHPP = hargaBeli * kuantitas;
 
                 const modalTransaksi = {
                     tanggal: modal.tanggal,
-                    deskripsi: `Modal Pembelian Stok: ${modal.nama} (${modal.kuantitas || 'n/a'})`,
+                    deskripsi: `Modal Pembelian Stok: ${modal.nama} (Qty: ${kuantitas})`,
                     tipe: 'Modal Penjualan', 
                     jumlah: jumlahHPP, 
                     idRef: idRef,
                     isStok: true 
                 };
                 
-                // Tambahkan entri stok BARU/TERBARU dari modalStokBaru
-                dataKeuangan.push(modalTransaksi);
-                isChanged = true;
+                // Hanya tambahkan jika jumlah HPP > 0 (pencegahan data kulakan kosong)
+                if (jumlahHPP > 0) {
+                     dataKeuangan.push(modalTransaksi);
+                     isChanged = true;
+                }
             });
             
-            if (isChanged) {
+            // 3. Simpan kembali data yang sudah disinkronisasi
+            if (isChanged || modalStokBaru.length > 0) {
                 localStorage.setItem('dataKeuangan', JSON.stringify(dataKeuangan));
             }
         }
@@ -855,6 +851,7 @@
         // ===========================================
 
         function tampilkanRingkasanKeuangan() {
+            // Panggil sinkronisasi di awal agar data terbaru terambil
             sinkronisasiDataKeuangan(); 
             const periodePilihan = document.getElementById('periode-ringkasan').value;
             const dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -877,12 +874,16 @@
             let totalPengeluaranLain = 0;
 
             dataTerfilter.forEach(transaksi => {
+                // Pastikan jumlah adalah angka menggunakan parseFloat()
+                const jumlah = parseFloat(transaksi.jumlah) || 0; 
+                
                 if (transaksi.tipe === 'Pendapatan') {
-                    totalOmset += transaksi.jumlah;
+                    totalOmset += jumlah;
                 } else if (transaksi.tipe === 'Modal Penjualan') {
-                    totalModalPenjualan += transaksi.jumlah; 
+                    // Modal Penjualan (HPP) dihitung sebagai PENGURANG Omset (Biaya)
+                    totalModalPenjualan += jumlah; 
                 } else if (transaksi.tipe === 'Pengeluaran') {
-                    totalPengeluaranLain += transaksi.jumlah;
+                    totalPengeluaranLain += jumlah;
                 }
             });
             
@@ -928,6 +929,9 @@
                 let colorVar = 'var(--text-color)';
                 let prefix = '';
                 
+                // Pastikan jumlah di sini juga berupa angka (PENTING untuk mengatasi BUG tampilan 0)
+                const jumlahTransaksi = parseFloat(transaksi.jumlah) || 0; 
+                
                 if (transaksi.tipe === 'Pendapatan') {
                     colorVar = 'var(--income-color)';
                     prefix = '+ ';
@@ -939,7 +943,7 @@
                     prefix = '- ';
                 }
 
-                const jumlahFormatted = `<span style="font-weight: 600; color: ${colorVar};">${prefix}Rp ${formatRupiah(transaksi.jumlah)}</span>`;
+                const jumlahFormatted = `<span style="font-weight: 600; color: ${colorVar};">${prefix}Rp ${formatRupiah(jumlahTransaksi)}</span>`;
                 
                 let actionButtons = '';
                 if (transaksi.idRef && (transaksi.idRef.startsWith('MANUAL') || transaksi.isStok)) {
@@ -1060,7 +1064,7 @@
         }
 
         /**
-         * DIPERBAIKI: Mengunci input jika transaksi adalah Stok/Otomatis.
+         * Mengunci input jika transaksi adalah Stok/Otomatis.
          */
         function tampilkanModalEdit(idRef) {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -1078,8 +1082,9 @@
 
             document.getElementById('edit-idref').value = idRef;
             document.getElementById('edit-tanggal').value = transaksi.tanggal;
+            // Gunakan parseFloat dan default ke 0 agar nilai di input terisi dengan benar
+            document.getElementById('edit-jumlah').value = parseFloat(transaksi.jumlah) || 0; 
             document.getElementById('edit-deskripsi').value = transaksi.deskripsi;
-            document.getElementById('edit-jumlah').value = transaksi.jumlah;
             
             const tipeSelect = document.getElementById('edit-tipe');
             if (transaksi.tipe === 'Pengeluaran') {
@@ -1109,7 +1114,7 @@
         }
 
         /**
-         * DIPERBAIKI: Memblokir proses simpan jika transaksi adalah Stok/Otomatis.
+         * Memblokir proses simpan jika transaksi adalah Stok/Otomatis.
          */
         function simpanEdit(event) {
             event.preventDefault();
@@ -1155,7 +1160,7 @@
         }
 
         /**
-         * DIPERBAIKI: Memblokir hapus jika transaksi adalah Stok/Otomatis.
+         * Memblokir hapus jika transaksi adalah Stok/Otomatis.
          */
         function hapusTransaksi(idRef) {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
