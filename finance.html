@@ -420,11 +420,11 @@
         </div>
         <div class="summary-grid">
             <div class="summary-card income">
-                <div class="label">Omset (Pendapatan)</div>
+                <div class="label">Penjualan</div>
                 <div class="value" id="total-omset">Rp 0</div>
             </div>
             <div class="summary-card hpp">
-                <div class="label">Modal Penjualan (HPP)</div>
+                <div class="label">Modal Stok</div>
                 <div class="value" id="total-modal-penjualan">Rp 0</div>
             </div>
             <div class="summary-card gross-profit">
@@ -467,8 +467,8 @@
                     <label for="filter-kategori">Tipe Transaksi:</label>
                     <select id="filter-kategori" onchange="filterTransaksi()">
                         <option value="">Semua Tipe</option>
-                        <option value="Pendapatan">Pendapatan</option>
-                        <option value="Modal Penjualan">Modal Penjualan (HPP)</option>
+                        <option value="Pendapatan">Penjualan</option>
+                        <option value="Modal Penjualan">Modal Stok</option>
                         <option value="Pengeluaran">Pengeluaran Lainnya</option>
                     </select>
                 </div>
@@ -512,7 +512,7 @@
                     <label for="kategori-pengeluaran">Tipe Pengeluaran:</label>
                     <select id="kategori-pengeluaran" required>
                         <option value="Pengeluaran Lainnya">Pengeluaran Lainnya (Non-Modal)</option>
-                        <option value="Modal Penjualan">Modal Penjualan (HPP/Stok)</option>
+                        <option value="Modal Penjualan">Modal Stok</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -544,7 +544,7 @@
                     <label for="edit-tipe">Tipe Transaksi:</label>
                     <select id="edit-tipe" required>
                         <option value="Pengeluaran">Pengeluaran Lainnya</option>
-                        <option value="Modal Penjualan">Modal Penjualan (HPP/Stok)</option>
+                        <option value="Modal Penjualan">Modal Stok</option>
                     </select>
                     <small id="edit-tipe-info" style="color:red;">Hanya Transaksi Manual/Stok yang bisa di Edit.</small>
                 </div>
@@ -564,7 +564,7 @@
             </h3>
             
             <p style="color: var(--text-color); line-height: 1.5; margin-bottom: 25px;">
-                **PERINGATAN KERAS:** Tindakan ini akan **menghapus SELURUH** data keuangan (Laporan, Omset, Modal, Pengeluaran Manual) yang tersimpan di halaman ini.
+                **PERINGATAN KERAS:** Tindakan ini akan **menghapus SELURUH** data keuangan (Laporan, Penjualan, Modal Stok, Pengeluaran Manual) yang tersimpan di halaman ini.
             </p>
             
             <p style="color: var(--light-text); font-size: 0.9em;">
@@ -586,7 +586,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Panggil sinkronisasi sebelum memuat data untuk memastikan Omset terbaru tersedia
+            // Panggil sinkronisasi sebelum memuat data untuk memastikan Penjualan terbaru tersedia
             sinkronisasiDataKeuangan();
             
             // Set nilai default untuk filter bulan dan tahun ke bulan/tahun saat ini
@@ -757,8 +757,9 @@
 
 
         /**
-         * FUNGSI PENTING: MENSINKRONISASI DATA PENJUALAN (Omset) dan Modal Stok
+         * FUNGSI PENTING: MENSINKRONISASI DATA PENJUALAN, MODAL STOK, dan LABA KOTOR
          * dari sumber-sumber lain ke dalam dataKeuangan
+         * ASUMSI: Setiap objek transaksi di 'transaksiHistori' memiliki properti 'labaKotor'.
          */
         function sinkronisasiDataKeuangan() {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -767,25 +768,44 @@
             let isChanged = false;
 
             const omsetHarian = {};
+            const labaKotorHarian = {};
+            
             let isTransaksiHistoriChanged = false;
             
-            // 1. Sinkronisasi Penjualan (Pendapatan - Agregasi Omset Harian)
+            // 1. Sinkronisasi Penjualan (Pendapatan - Agregasi Omset Harian) & Laba Kotor Harian
             transaksiHistori.forEach(transaksi => {
                 const tanggal = transaksi.tanggal;
-                const key = `OmsetAgg_${tanggal}`; 
+                const keyOmset = `OmsetAgg_${tanggal}`; 
+                const keyLabaKotor = `LabaKotorAgg_${tanggal}`; 
                 
-                if (!omsetHarian[key]) {
-                    omsetHarian[key] = {
+                // ASUMSI: 'transaksi.labaKotor' sudah ada. Fallback: laba kotor = total - hpp
+                const labaKotor = parseFloat(transaksi.labaKotor || 0) || (parseFloat(transaksi.total || 0) - parseFloat(transaksi.hpp || 0));
+
+                // Agregasi OMSET/PENJUALAN
+                if (!omsetHarian[keyOmset]) {
+                    omsetHarian[keyOmset] = {
                         tanggal: tanggal,
                         deskripsi: `Penjualan Harian (Aggregasi)`,
                         tipe: 'Pendapatan',
                         jumlah: 0,
                         isAggregated: true, 
-                        idRef: key 
+                        idRef: keyOmset 
                     };
                 }
-                // Pastikan jumlah transaksi adalah angka
-                omsetHarian[key].jumlah += parseFloat(transaksi.total) || 0;
+                omsetHarian[keyOmset].jumlah += parseFloat(transaksi.total) || 0;
+
+                // Agregasi LABA KOTOR (Pendapatan Kotor)
+                if (!labaKotorHarian[keyLabaKotor]) {
+                    labaKotorHarian[keyLabaKotor] = {
+                        tanggal: tanggal,
+                        deskripsi: `Laba Kotor Harian (Aggregasi Penjualan)`,
+                        tipe: 'Laba Kotor', 
+                        jumlah: 0,
+                        isAggregated: true, 
+                        idRef: keyLabaKotor 
+                    };
+                }
+                labaKotorHarian[keyLabaKotor].jumlah += labaKotor;
                 
                 if (!transaksi.isSyncedFinance) {
                     transaksi.isSyncedFinance = true; 
@@ -793,12 +813,17 @@
                 }
             });
 
-            // Hapus SEMUA entri 'Pendapatan' yang merupakan hasil Aggregasi LAMA.
-            dataKeuangan = dataKeuangan.filter(t => t.tipe !== 'Pendapatan' || !t.isAggregated);
+            // Hapus SEMUA entri 'Pendapatan' dan 'Laba Kotor' yang merupakan hasil Aggregasi LAMA.
+            dataKeuangan = dataKeuangan.filter(t => (t.tipe !== 'Pendapatan' && t.tipe !== 'Laba Kotor') || !t.isAggregated);
             
             // Tambahkan Aggregasi Pendapatan BARU
             for (const key in omsetHarian) {
                 dataKeuangan.push(omsetHarian[key]);
+                isChanged = true; 
+            }
+            // Tambahkan Aggregasi LABA KOTOR BARU
+            for (const key in labaKotorHarian) {
+                dataKeuangan.push(labaKotorHarian[key]);
                 isChanged = true; 
             }
             
@@ -807,21 +832,15 @@
                  isChanged = true;
             }
 
-            // 2. Sinkronisasi Modal Penjualan (HPP/Stok - dari sumber stok)
+            // 2. Sinkronisasi Modal Stok (HPP/Stok)
             
             // Hapus SEMUA entri stok lama dari dataKeuangan SEBELUM ditambahkan ulang.
             dataKeuangan = dataKeuangan.filter(t => !t.isStok);
 
             modalStokBaru.forEach(modal => {
                 const idRef = modal.idRef;
-                
-                // START PERBAIKAN: Memastikan nilai numerik yang valid
-                // Menggunakan (modal.prop || 0) dan parseFloat ganda untuk keamanan
                 const hargaBeli = parseFloat(modal.hargaBeli || 0) || 0; 
                 const kuantitas = parseFloat(modal.kuantitas || 0) || 0; 
-                // END PERBAIKAN
-                
-                // Perkalian yang seharusnya (Harga Beli Satuan x Kuantitas)
                 const jumlahHPP = hargaBeli * kuantitas;
 
                 const modalTransaksi = {
@@ -833,7 +852,6 @@
                     isStok: true 
                 };
                 
-                // Hanya tambahkan jika jumlah HPP > 0 (pencegahan data kulakan kosong)
                 if (jumlahHPP > 0) {
                      dataKeuangan.push(modalTransaksi);
                      isChanged = true;
@@ -851,7 +869,6 @@
         // ===========================================
 
         function tampilkanRingkasanKeuangan() {
-            // Panggil sinkronisasi di awal agar data terbaru terambil
             sinkronisasiDataKeuangan(); 
             const periodePilihan = document.getElementById('periode-ringkasan').value;
             const dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -872,22 +889,28 @@
             let totalOmset = 0;
             let totalModalPenjualan = 0;
             let totalPengeluaranLain = 0;
+            let totalLabaKotorAgregasi = 0; 
 
             dataTerfilter.forEach(transaksi => {
-                // Pastikan jumlah adalah angka menggunakan parseFloat()
                 const jumlah = parseFloat(transaksi.jumlah) || 0; 
                 
                 if (transaksi.tipe === 'Pendapatan') {
                     totalOmset += jumlah;
                 } else if (transaksi.tipe === 'Modal Penjualan') {
-                    // Modal Penjualan (HPP) dihitung sebagai PENGURANG Omset (Biaya)
                     totalModalPenjualan += jumlah; 
                 } else if (transaksi.tipe === 'Pengeluaran') {
                     totalPengeluaranLain += jumlah;
+                } 
+                // AMBIL NILAI LABA KOTOR DARI SUMBER AGREGASI
+                else if (transaksi.tipe === 'Laba Kotor') {
+                    totalLabaKotorAgregasi += jumlah;
                 }
             });
             
-            const totalPendapatanKotor = totalOmset - totalModalPenjualan;
+            // Pendapatan Kotor (Laba Kotor) diambil dari hasil agregasi
+            const totalPendapatanKotor = totalLabaKotorAgregasi;
+            
+            // Keuntungan Bersih = Pendapatan Kotor - Pengeluaran Lain
             const totalProfit = totalPendapatanKotor - totalPengeluaranLain;
 
             // Tampilkan Hasil Ringkasan
@@ -925,23 +948,28 @@
             const limitedData = dataKeuangan.slice(0, limit);
 
             limitedData.forEach(transaksi => {
+                // Sembunyikan transaksi Laba Kotor dari tabel riwayat
+                if (transaksi.tipe === 'Laba Kotor') return; 
+                
                 const row = document.createElement('tr');
                 let colorVar = 'var(--text-color)';
                 let prefix = '';
+                let tipeTampilan = transaksi.tipe;
                 
-                // Pastikan jumlah di sini juga berupa angka (PENTING untuk mengatasi BUG tampilan 0)
                 const jumlahTransaksi = parseFloat(transaksi.jumlah) || 0; 
                 
                 if (transaksi.tipe === 'Pendapatan') {
                     colorVar = 'var(--income-color)';
                     prefix = '+ ';
+                    tipeTampilan = 'Penjualan'; 
                 } else if (transaksi.tipe === 'Modal Penjualan') {
                     colorVar = 'var(--modal-color)';
                     prefix = '- ';
+                    tipeTampilan = 'Modal Stok'; 
                 } else if (transaksi.tipe === 'Pengeluaran') {
                     colorVar = 'var(--expense-color)';
                     prefix = '- ';
-                }
+                } 
 
                 const jumlahFormatted = `<span style="font-weight: 600; color: ${colorVar};">${prefix}Rp ${formatRupiah(jumlahTransaksi)}</span>`;
                 
@@ -962,11 +990,15 @@
                 row.innerHTML = `
                     <td>${transaksi.tanggal}</td>
                     <td>${transaksi.deskripsi}</td>
-                    <td><span style="font-weight: 500; color: ${colorVar};">${transaksi.tipe}</span></td>
+                    <td><span style="font-weight: 500; color: ${colorVar};">${tipeTampilan}</span></td>
                     <td>${jumlahFormatted}</td>
                     <td>${actionButtons}</td> `;
                 tbody.appendChild(row);
             });
+            
+            if (tbody.children.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--light-text); padding: 20px;">Tidak ada riwayat transaksi yang tercatat untuk filter ini.</td></tr>';
+            }
         }
         
         function filterTransaksi() {
@@ -977,6 +1009,9 @@
             const { start: pStart, end: pEnd } = getDatesForPeriod(periodePilihan);
 
             let dataTerfilter = dataKeuanganAwal.filter(transaksi => {
+                // Sembunyikan Laba Kotor dari filter
+                if (transaksi.tipe === 'Laba Kotor') return false; 
+                
                 if (periodePilihan === 'Semua') return true;
                 
                 const transaksiDateString = transaksi.tanggal; 
@@ -1034,6 +1069,7 @@
             const newExpense = {
                 tanggal: dapatkanTanggalHariIni(),
                 deskripsi: deskripsi,
+                // Tipe internal tetap 'Modal Penjualan' untuk Modal Stok
                 tipe: kategoriPilihan === 'Pengeluaran Lainnya' ? 'Pengeluaran' : 'Modal Penjualan',
                 jumlah: jumlah,
                 idRef: `MANUAL_${Date.now()}` 
@@ -1075,14 +1111,13 @@
                 return;
             }
             
-            if (transaksi.isAggregated && transaksi.tipe === 'Pendapatan') {
-                showNotification("Transaksi pendapatan agregasi (otomatis) tidak bisa diedit secara langsung.", 3000);
+            if (transaksi.tipe === 'Laba Kotor' || (transaksi.isAggregated && transaksi.tipe === 'Pendapatan')) {
+                showNotification("Transaksi Pendapatan Kotor atau Penjualan agregasi (otomatis) tidak bisa diedit secara langsung.", 3000);
                 return;
             }
 
             document.getElementById('edit-idref').value = idRef;
             document.getElementById('edit-tanggal').value = transaksi.tanggal;
-            // Gunakan parseFloat dan default ke 0 agar nilai di input terisi dengan benar
             document.getElementById('edit-jumlah').value = parseFloat(transaksi.jumlah) || 0; 
             document.getElementById('edit-deskripsi').value = transaksi.deskripsi;
             
@@ -1168,8 +1203,8 @@
 
             if (!transaksi) return;
 
-            if (transaksi.isAggregated && transaksi.tipe === 'Pendapatan') {
-                showNotification("Transaksi pendapatan agregasi (otomatis) tidak bisa dihapus.", 3000);
+            if (transaksi.tipe === 'Laba Kotor' || (transaksi.isAggregated && transaksi.tipe === 'Pendapatan')) {
+                showNotification("Transaksi otomatis (Penjualan/Laba Kotor) tidak bisa dihapus.", 3000);
                 return;
             }
             
