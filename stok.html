@@ -110,6 +110,13 @@
         .btn-secondary:hover {
             background-color: #1e7e34;
         }
+        
+        .btn-danger-custom { /* Styling baru untuk tombol reset */
+            background-color: var(--danger-color);
+        }
+        .btn-danger-custom:hover {
+            background-color: #bd2130;
+        }
 
         .table-responsive {
             width: 100%;
@@ -405,6 +412,32 @@
         .btn-toggle-input:hover {
             background-color: #5a6268;
         }
+        
+        /* Gaya untuk Filter Transaksi */
+        .transaksi-filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .transaksi-filter-group {
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        .transaksi-filter-group label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .transaksi-filter-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -424,6 +457,8 @@
                 <input type="file" id="file-input-transaksi" accept=".csv" style="display: none;" onchange="handleImportTransaksi(event)">
                 
                 <button class="btn btn-secondary" onclick="exportDataUntukKaryawan()"><i class="fas fa-clipboard-list"></i> Ekspor Data untuk Karyawan (.csv)</button> 
+                
+                <button class="btn btn-danger-custom" onclick="resetSemuaData()"><i class="fas fa-trash-alt"></i> Reset Semua Data</button>
             </div>
             <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -478,6 +513,18 @@
         <div class="data-table-container">
             <div class="table-header transaksi-header">
                 <h2>Transaksi Stok Terkini <i class="fas fa-history"></i></h2>
+            </div>
+            
+            <div class="transaksi-filter-container">
+                <div class="transaksi-filter-group">
+                    <label for="filter-bahan">Cari Bahan Mentah:</label>
+                    <input type="text" id="filter-bahan" placeholder="Nama Bahan..." oninput="tampilkanTransaksiStok()">
+                </div>
+                <div class="transaksi-filter-group">
+                    <label for="filter-tanggal">Filter Tanggal:</label>
+                    <input type="date" id="filter-tanggal" onchange="tampilkanTransaksiStok()">
+                </div>
+                <button class="btn" style="background-color: #17a2b8; padding: 8px 15px;" onclick="resetFilterTransaksi()">Reset Filter</button>
             </div>
             <div class="table-responsive">
                 <table>
@@ -704,8 +751,10 @@
             const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             return `${date}, ${time}`;
         }
-
-        // Fungsi yang dibutuhkan oleh HPP di finance.html
+        
+        /**
+         * Mengambil tanggal dalam format YYYY-MM-DD
+         */
         function dapatkanTanggalHariIni() {
             const hariIni = new Date();
             const year = hariIni.getFullYear();
@@ -713,6 +762,24 @@
             const day = hariIni.getDate().toString().padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
+        
+        /**
+         * Mengambil tanggal transaksi dari string waktu lokal (misal: "21/09/2025, 14.00")
+         * dan mengembalikan dalam format YYYY-MM-DD
+         * @param {string} waktuLokalString - String waktu lokal
+         * @returns {string} Tanggal dalam format YYYY-MM-DD
+         */
+        function getTanggalDariWaktuLokal(waktuLokalString) {
+            // Contoh: "21/09/2025, 14.00" -> ambil "21/09/2025"
+            const bagianTanggal = waktuLokalString.split(',')[0].trim();
+            // Ubah format DD/MM/YYYY menjadi YYYY-MM-DD
+            const [day, month, year] = bagianTanggal.split('/');
+            if (year && month && day) {
+                return `${year}-${month}-${day}`;
+            }
+            return ''; // Kembalikan string kosong jika format tidak sesuai
+        }
+
         
         // --- FUNGSI PENTING UNTUK MENCATAT MODAL PENJUALAN (HPP) ---
         /**
@@ -908,20 +975,43 @@
             tampilkanTransaksiStok(); 
         }
         
+        /**
+         * Menampilkan transaksi stok dengan fitur filter.
+         */
         function tampilkanTransaksiStok() {
             const tbody = document.getElementById('transaksi-stok-table-body');
             tbody.innerHTML = '';
             
-            if (stokHistori.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Belum ada transaksi penambahan stok bahan mentah.</td></tr>';
+            const filterBahan = document.getElementById('filter-bahan').value.toLowerCase().trim();
+            const filterTanggal = document.getElementById('filter-tanggal').value; // Format YYYY-MM-DD
+            
+            let dataTampil = stokHistori;
+            
+            // 1. Filter Bahan
+            if (filterBahan) {
+                dataTampil = dataTampil.filter(t => 
+                    t.nama.toLowerCase().includes(filterBahan)
+                );
+            }
+            
+            // 2. Filter Tanggal
+            if (filterTanggal) {
+                dataTampil = dataTampil.filter(t => 
+                    getTanggalDariWaktuLokal(t.waktu) === filterTanggal
+                );
+            }
+            
+            if (dataTampil.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Tidak ada transaksi penambahan stok bahan mentah yang sesuai dengan filter.</td></tr>';
                 return;
             }
             
-            const transaksiTerkini = stokHistori.slice(0, 10); // Tampilkan 10 transaksi terkini
+            // Tampilkan 100 transaksi terkini setelah difilter, atau semua jika filter digunakan
+            const transaksiTerkini = dataTampil.slice(0, filterBahan || filterTanggal ? dataTampil.length : 100); 
 
-            transaksiTerkini.forEach((t, indexLocal) => {
-                // indexLocal adalah index transaksi dalam array transaksiTerkini (slice dari stokHistori)
-                const indexAsli = indexLocal; // Karena kita menggunakan slice dari depan (unshift), index local sama dengan index di stokHistori
+            transaksiTerkini.forEach(t => {
+                // Cari index asli di stokHistori untuk fungsionalitas hapus
+                const indexAsli = stokHistori.findIndex(item => item === t);
                 
                 const row = document.createElement('tr');
                 // Menggunakan formatRupiah(t.biaya) tanpa format Angka di kolom biaya
@@ -936,6 +1026,15 @@
                 `;
                 tbody.appendChild(row);
             });
+        }
+        
+        /**
+         * Mereset input filter transaksi dan memuat ulang tabel.
+         */
+        function resetFilterTransaksi() {
+            document.getElementById('filter-bahan').value = '';
+            document.getElementById('filter-tanggal').value = '';
+            tampilkanTransaksiStok();
         }
 
         /**
@@ -968,10 +1067,10 @@
                 
                 // Hitung total nilai stok sebelum transaksi yang akan dihapus
                 // Nilai total sebelum transaksi = (Stok Saat Ini * Harga Modal Rata-rata Saat Ini)
-                const totalNilaiSebelumTransaksi = stokLama * hargaModalLama;
+                const totalNilaiSaatIni = stokLama * hargaModalLama;
                 
                 // Nilai total setelah transaksi dihapus
-                const totalNilaiSetelahDihapus = totalNilaiSebelumTransaksi - totalBiayaDihapus; 
+                const totalNilaiSetelahDihapus = totalNilaiSaatIni - totalBiayaDihapus; 
                 
                 const stokBaru = stokLama - jumlahYangDihapus;
                 
@@ -1483,6 +1582,8 @@
         // FUNGIONALITAS IMPOR/EKSPOR DATA 
         // ===========================================
 
+        // [FUNGSI IMPOR/EKSPOR LAINNYA TETAP SAMA]...
+
         /**
          * 1. IMPOR TRANSAKSI KULAKAN (CSV dari Karyawan)
          */
@@ -1738,6 +1839,37 @@
             reader.readAsText(file);
             document.getElementById('file-input-full').value = ''; // Reset input
         }
+        
+        // ===========================================
+        // FUNGSI BARU: RESET DATA
+        // ===========================================
+        
+        async function resetSemuaData() {
+            const konfirmasi = await customConfirm(
+                "⚠️ **PERINGATAN KERAS!** ⚠️ \n\nAnda yakin ingin menghapus **SEMUA** data yang tersimpan di Manajemen Stok (Daftar Stok, Resep, Histori Kulakan) dan data modal/HPP di halaman Keuangan? \n\n**Tindakan ini tidak dapat dibatalkan.**",
+                "RESET SEMUA DATA STOK & HPP"
+            );
+
+            if (konfirmasi) {
+                // Hapus data lokal
+                localStorage.removeItem('daftarStok');
+                localStorage.removeItem('stokHistori');
+                
+                // Hapus data yang terhubung ke finance.html
+                localStorage.removeItem('modalStokBaru'); 
+                
+                // Reset variabel global
+                daftarStok = [];
+                stokHistori = [];
+                
+                // Muat ulang tampilan
+                tampilkanDaftarStok();
+                tampilkanTransaksiStok();
+                
+                await customAlert("Semua data manajemen stok berhasil direset.", "Reset Berhasil! 🗑️");
+            }
+        }
+
     </script>
 </body>
 </html>
