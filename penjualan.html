@@ -51,6 +51,7 @@
             color: var(--primary-dark);
             margin-right: 20px;
             transition: color 0.3s;
+            text-decoration: none;
         }
         .header a:hover {
             color: var(--primary-color);
@@ -83,7 +84,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            align-items: flex-end; /* Memastikan tombol rata bawah */
+            align-items: flex-end; 
         }
 
         .filter-group {
@@ -132,7 +133,7 @@
             cursor: pointer;
             transition: background-color 0.3s, transform 0.1s;
             min-width: 120px;
-            margin-top: 5px; /* Sesuaikan margin agar rata dengan input */
+            margin-top: 5px; 
         }
 
         .btn-filter {
@@ -154,19 +155,19 @@
         /* --- Kartu Ringkasan dan Top 10 --- */
         .analytics-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* Membagi menjadi tiga kolom */
-            gap: 20px; /* Kurangi gap sedikit */
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 20px; 
             margin-bottom: 30px;
         }
 
         @media (max-width: 1100px) {
             .analytics-grid {
-                grid-template-columns: 1fr 1fr; /* Dua kolom di tablet */
+                grid-template-columns: 1fr 1fr; 
             }
         }
         @media (max-width: 768px) {
             .analytics-grid {
-                grid-template-columns: 1fr; /* Satu kolom di HP */
+                grid-template-columns: 1fr; 
                 gap: 20px;
             }
         }
@@ -186,12 +187,41 @@
         .summary-card {
             border-left: 5px solid var(--primary-color);
         }
-        .summary-card .value {
-            font-size: 2.5em;
+        /* Kontainer untuk membedakan total penjualan dan laba kotor */
+        .summary-value-group {
+            margin-top: 10px;
+        }
+        
+        .summary-value-group .label {
+            font-weight: 500;
+            margin-top: 15px; /* Spasi antar label */
+            display: block;
+            color: var(--text-color);
+        }
+
+        .summary-value-group .value {
+            font-size: 1.8em; /* Ukuran font lebih kecil sedikit */
             font-weight: 700;
             margin-top: 5px;
-            color: var(--danger-color); 
+            color: var(--danger-color); /* Total Penjualan dengan warna Merah/Danger */
         }
+        
+        /* Gaya khusus untuk Laba Kotor (dibuat hijau) */
+        .summary-value-group .profit-label {
+            color: var(--text-color);
+            font-weight: 500;
+            margin-top: 15px; 
+        }
+        .summary-value-group .profit-value {
+            color: var(--secondary-color); /* Warna Hijau untuk Laba Kotor */
+        }
+
+        @media (max-width: 768px) {
+            .summary-value-group .value {
+                font-size: 1.5em;
+            }
+        }
+
 
         /* Gaya Kartu Payment Summary */
         .payment-summary-card {
@@ -227,10 +257,10 @@
             color: var(--warning-color);
             margin-right: 10px;
         }
-        /* PERUBAHAN CSS UNTUK PERSENTASE PEMBAYARAN */
+        
         .payment-percentage {
             font-weight: 600;
-            color: var(--secondary-color); /* Menggunakan warna hijau keuntungan */
+            color: var(--secondary-color); 
             font-size: 0.9em;
         }
 
@@ -283,13 +313,12 @@
             font-weight: 600;
             color: var(--primary-dark);
             font-size: 1em;
-            margin-left: 10px; /* Jarak dari persentase */
+            margin-left: 10px; 
         }
         
-        /* PERUBAHAN CSS UNTUK PERSENTASE PRODUK */
         .product-percentage {
             font-weight: 600;
-            color: var(--secondary-color); /* Menggunakan warna hijau keuntungan */
+            color: var(--secondary-color); 
             font-size: 0.9em;
         }
 
@@ -423,8 +452,13 @@
         
         <div class="analytics-grid">
             <div class="summary-card">
-                <div class="label" id="summary-label">Total Penjualan (Semua Data)</div>
-                <div class="value" id="total-penjualan">Rp 0</div>
+                <div class="summary-value-group">
+                    <div class="label" id="summary-label">Total Penjualan (Semua Data)</div>
+                    <div class="value" id="total-penjualan">Rp 0</div>
+                    
+                    <div class="label profit-label"><i class="fas fa-money-bill-wave"></i> Total Laba Kotor</div>
+                    <div class="value profit-value" id="total-laba-kotor">Rp 0</div>
+                </div>
             </div>
 
             <div class="payment-summary-card">
@@ -463,7 +497,20 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            filterData(); // Muat semua data saat halaman pertama kali dibuka
+            // Inisialisasi default filter bulan dan tahun
+            const today = new Date();
+            document.getElementById('filter-month').value = today.toISOString().slice(0, 7);
+            document.getElementById('filter-year').value = today.getFullYear();
+            
+            // Panggil filterData() di awal untuk memuat semua data default
+            filterData(); 
+            
+            // Event listener untuk refresh data jika ada perubahan di halaman lain
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'transaksiHistori') {
+                    filterData();
+                }
+            });
         });
 
         function formatRupiah(angka) {
@@ -496,45 +543,55 @@
             const transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
             const filterType = document.getElementById('filter-type').value;
             let filteredData = [];
-
-            const summaryLabel = document.getElementById('summary-label');
+            let summaryLabelText = 'Total Penjualan (Semua Data)';
 
             // Logika Filter Data
             if (filterType === 'daily') {
                 const filterDate = document.getElementById('filter-date').value;
                 if (!filterDate) {
-                    alert('Harap pilih tanggal.');
+                    // Hanya tampilkan alert jika bukan pemanggilan awal
+                    if (document.activeElement.id === 'filter-type' || document.activeElement.className.includes('btn-filter')) {
+                        alert('Harap pilih tanggal.');
+                    }
                     return;
                 }
                 filteredData = transaksiHistori.filter(t => t.tanggal === filterDate);
-                summaryLabel.textContent = `Total Penjualan Tanggal ${new Date(filterDate).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+                summaryLabelText = `Total Penjualan Tanggal ${new Date(filterDate).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}`;
             } else if (filterType === 'weekly') {
-                alert('Filter mingguan belum sepenuhnya diimplementasikan. Harap gunakan filter Harian, Bulanan, atau Tahunan.');
+                // Untuk saat ini, kembali ke semua data dan berikan info
+                if (document.activeElement.id === 'filter-type' || document.activeElement.className.includes('btn-filter')) {
+                    alert('Filter mingguan belum sepenuhnya diimplementasikan. Harap gunakan filter Harian, Bulanan, atau Tahunan.');
+                }
                 document.getElementById('filter-type').value = 'all';
                 filteredData = transaksiHistori;
-                summaryLabel.textContent = 'Total Penjualan (Semua Data)';
+                summaryLabelText = 'Total Penjualan (Semua Data)';
             } else if (filterType === 'monthly') {
                 const filterMonth = document.getElementById('filter-month').value;
                 if (!filterMonth) {
-                    alert('Harap pilih bulan.');
+                     if (document.activeElement.id === 'filter-type' || document.activeElement.className.includes('btn-filter')) {
+                        alert('Harap pilih bulan.');
+                    }
                     return;
                 }
                 filteredData = transaksiHistori.filter(t => t.tanggal.startsWith(filterMonth));
                 const [year, month] = filterMonth.split('-');
                 const monthName = new Date(year, month - 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-                summaryLabel.textContent = `Total Penjualan Bulan ${monthName}`;
+                summaryLabelText = `Total Penjualan Bulan ${monthName}`;
             } else if (filterType === 'yearly') {
                 const filterYear = document.getElementById('filter-year').value;
                 if (!filterYear) {
-                    alert('Harap masukkan tahun.');
+                    if (document.activeElement.id === 'filter-type' || document.activeElement.className.includes('btn-filter')) {
+                        alert('Harap masukkan tahun.');
+                    }
                     return;
                 }
                 filteredData = transaksiHistori.filter(t => t.tanggal.startsWith(filterYear));
-                summaryLabel.textContent = `Total Penjualan Tahun ${filterYear}`;
+                summaryLabelText = `Total Penjualan Tahun ${filterYear}`;
             } else { // 'all'
                 filteredData = transaksiHistori;
-                summaryLabel.textContent = 'Total Penjualan (Semua Data)';
             }
+            
+            document.getElementById('summary-label').textContent = summaryLabelText;
             
             renderTable(filteredData);
             calculateTopSellers(filteredData);
@@ -579,25 +636,42 @@
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">Tidak ada data yang ditemukan.</td></tr>';
                 document.getElementById('total-penjualan').textContent = formatRupiah(0);
+                document.getElementById('total-laba-kotor').textContent = formatRupiah(0); // 🔥 UPDATE LABA KOTOR
+                
+                // 🔥 SANGAT PENTING: Set nilai 0 ke Local Storage jika tidak ada data
+                localStorage.setItem('omsetPendapatan', 0); 
+                
                 return;
             }
+            
+            // Urutkan data berdasarkan tanggal terbaru
+            data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
 
             data.forEach(transaksi => {
                 totalPenjualan += transaksi.total;
-                totalLabaKotor += (transaksi.labaKotor || 0);
+                // Pastikan labaKotor ada dan merupakan angka
+                const labaKotorTransaksi = transaksi.labaKotor || 0; 
+                totalLabaKotor += labaKotorTransaksi;
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${transaksi.id}</td>
                     <td>${transaksi.tanggal}</td>
                     <td>${formatRupiah(transaksi.total)}</td>
-                    <td>${formatRupiah(transaksi.labaKotor || 0)}</td>
+                    <td>${formatRupiah(labaKotorTransaksi)}</td>
                     <td><button class="btn-detail" onclick="tampilkanDetail(${transaksi.id})"><i class="fas fa-eye"></i> Detail</button></td>
                 `;
                 tbody.appendChild(row);
             });
 
             document.getElementById('total-penjualan').textContent = formatRupiah(totalPenjualan);
+            // 🔥 UPDATE NILAI LABA KOTOR DI KARTU RINGKASAN
+            document.getElementById('total-laba-kotor').textContent = formatRupiah(totalLabaKotor);
+            
+            // ===============================================
+            // ✅ PERBAIKAN: Simpan Total Penjualan (Omset) ke Local Storage
+            localStorage.setItem('omsetPendapatan', totalPenjualan);
+            // ===============================================
         }
         
         // FUNGSI UNTUK MENGHITUNG METODE PEMBAYARAN
