@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Stok</title>
+    <title>Manajemen Modal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        /* CSS yang Anda sediakan (Dibuat lebih rapi dan menggunakan variabel CSS) */
+        /* CSS yang Anda sediakan */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
         :root {
@@ -22,6 +22,10 @@
             --danger-color: #dc3545;
             --warning-color: #ffc107;
             --success-color: #28a745;
+            --tertiary-color: #6f42c1; /* Warna baru untuk Modal Lainnya */
+            /* Warna baru untuk ringkasan modal */
+            --modal-asset-color: #fd7e14; /* Orange */
+            --modal-stok-color: #17a2b8; /* Cyan */
         }
 
         body {
@@ -118,6 +122,16 @@
         }
         .btn-danger-custom:hover {
             background-color: #bd2130;
+        }
+        /* Gaya baru untuk Modal Lainnya */
+        .btn-tertiary {
+            background-color: var(--tertiary-color);
+        }
+        .btn-tertiary:hover {
+            background-color: #5a349c;
+        }
+        .modal-lainnya-header h2 {
+             color: var(--tertiary-color);
         }
 
         .table-responsive {
@@ -255,7 +269,7 @@
         .custom-alert-content {
             background-color: var(--card-background);
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             width: 90%;
             max-width: 400px;
             padding: 25px;
@@ -440,10 +454,14 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             align-items: flex-end;
+            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         .transaksi-filter-group {
             flex-grow: 1;
-            min-width: 200px;
+            min-width: 150px; 
         }
         .transaksi-filter-group label {
             font-weight: 500;
@@ -451,13 +469,77 @@
             margin-bottom: 5px;
             font-size: 0.9em;
         }
-        .transaksi-filter-group input {
+        .transaksi-filter-group input, .transaksi-filter-group select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ced4da;
             border-radius: 5px;
             box-sizing: border-box;
         }
+
+        /* Gaya untuk Total Biaya Transaksi (Dibuat lebih menonjol) */
+        #total-biaya-stok {
+            margin-bottom: 20px; 
+            font-size: 1.3em;
+            font-weight: 700; 
+            padding: 15px; 
+            background-color: #e9f5ff; 
+            border-left: 5px solid var(--primary-dark); 
+            border-radius: 5px;
+            color: var(--primary-dark);
+        }
+        /* Gaya baru untuk Modal Lainnya */
+        .modal-lainnya-info {
+            padding: 15px; 
+            background-color: #f7f3ff; 
+            border-left: 5px solid var(--tertiary-color); 
+            border-radius: 5px;
+            color: var(--tertiary-color);
+            margin-top: 15px;
+            font-weight: 500;
+        }
+        
+        /* GAYA BARU: Total Modal Keseluruhan */
+        #total-modal-keseluruhan {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .modal-summary-card {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .modal-summary-card h4 {
+            margin-top: 0;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-bottom: 2px solid;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .modal-summary-card strong {
+            font-size: 1.8em;
+            font-weight: 700;
+            display: block;
+        }
+        .modal-aset {
+            background-color: #fffaf0;
+            border-left: 5px solid var(--modal-asset-color);
+            color: var(--modal-asset-color);
+        }
+        .modal-stok {
+            background-color: #f0ffff;
+            border-left: 5px solid var(--modal-stok-color);
+            color: var(--modal-stok-color);
+        }
+
 
         /* Gaya untuk Peringatan Error di footer */
         .footer-debug {
@@ -524,6 +606,12 @@
             th, td {
                 padding: 10px 8px;
             }
+             #total-modal-keseluruhan {
+                flex-direction: column;
+            }
+            .modal-summary-card {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
@@ -532,10 +620,16 @@
     <div class="container">
         <div class="header">
             <a href="index.html" aria-label="Kembali ke Beranda"><i class="fas fa-arrow-left"></i></a>
-            <h1>Manajemen Stok</h1>
+            <h1>Manajemen Modal</h1>
         </div>
         
-        <div class="data-table-container" style="margin-bottom: 30px;">
+        <div id="total-biaya-stok">
+            Total Biaya Stok Keseluruhan: Rp 0,-
+        </div>
+        
+        <div id="total-modal-keseluruhan">
+            </div>
+        <div class="data-table-container">
             <div class="table-header">
                 <h2>Alat Data <i class="fas fa-database"></i></h2>
             </div>
@@ -598,27 +692,81 @@
         </div>
         
         <div class="data-table-container">
+            <div class="table-header modal-lainnya-header">
+                <h2>Modal Lainnya (Aset Tetap) <i class="fas fa-hard-hat"></i></h2>
+                <button class="btn btn-tertiary" onclick="tampilkanModalTambahModalLainnya()"><i class="fas fa-plus"></i> Tambah Modal Lainnya</button>
+            </div>
+            <div id="total-aset-info" class="modal-lainnya-info">
+                Total Nilai Aset Tetap: <strong>Rp 0,-</strong>
+            </div>
+            <div class="table-responsive" style="margin-top: 15px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Modal</th>
+                            <th>Kategori</th>
+                            <th>Kuantitas</th>
+                            <th>Harga Satuan (Rp)</th>
+                            <th>Total Nilai (Rp)</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-lainnya-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="data-table-container">
             <div class="table-header transaksi-header">
-                <h2>Transaksi Stok Terkini <i class="fas fa-history"></i></h2>
+                <h2>Riwayat Transaksi Stok & Modal Terkini <i class="fas fa-history"></i></h2>
             </div>
             
             <div class="transaksi-filter-container">
-                <div class="transaksi-filter-group">
-                    <label for="filter-bahan">Cari Bahan Mentah:</label>
-                    <input type="text" id="filter-bahan" placeholder="Nama Bahan..." oninput="tampilkanTransaksiStok()">
+                <div class="transaksi-filter-group" style="min-width: 120px;">
+                    <label for="filter-tipe-transaksi">Tipe Filter:</label>
+                    <select id="filter-tipe-transaksi" onchange="toggleFilterPeriode(); tampilkanTransaksiStok();">
+                        <option value="bulanan">Bulanan & Tahun</option>
+                        <option value="tahunan">Tahunan</option>
+                        <option value="semua">Semua Waktu</option>
+                    </select>
                 </div>
-                <div class="transaksi-filter-group">
-                    <label for="filter-tanggal">Filter Tanggal:</label>
-                    <input type="date" id="filter-tanggal" onchange="tampilkanTransaksiStok()">
+                
+                <div class="transaksi-filter-group" id="group-filter-bulan" style="min-width: 120px;">
+                    <label for="filter-bulan">Bulan:</label>
+                    <select id="filter-bulan" onchange="tampilkanTransaksiStok()">
+                        </select>
                 </div>
-                <button class="btn" style="background-color: #17a2b8; padding: 8px 15px;" onclick="resetFilterTransaksi()">Reset Filter</button>
+                
+                <div class="transaksi-filter-group" id="group-filter-tahun" style="min-width: 120px;">
+                    <label for="filter-tahun">Tahun:</label>
+                    <select id="filter-tahun" onchange="tampilkanTransaksiStok()">
+                        </select>
+                </div>
+                
+                <div class="transaksi-filter-group">
+                    <label for="filter-bahan">Cari Bahan Mentah/Modal:</label>
+                    <input type="text" id="filter-bahan" placeholder="Nama Bahan/Modal..." oninput="tampilkanTransaksiStok()">
+                </div>
+
+                <div class="transaksi-filter-group" style="min-width: 120px;">
+                    <label for="filter-kategori-transaksi">Kategori:</label>
+                    <select id="filter-kategori-transaksi" onchange="tampilkanTransaksiStok()">
+                        <option value="semua">Semua Kategori</option>
+                        <option value="stok">Stok Bahan</option>
+                        <option value="modal_lain">Modal Lainnya</option>
+                    </select>
+                </div>
+                
+                <button class="btn" style="background-color: #17a2b8; padding: 8px 15px;" onclick="resetFilterTransaksi()"><i class="fas fa-sync-alt"></i> Reset Filter</button>
             </div>
+            
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>Waktu</th>
-                            <th>Bahan Mentah</th>
+                            <th>Kategori</th> <th>Waktu</th>
+                            <th>Nama Barang</th>
                             <th>Jumlah Tambah</th>
                             <th>Total Biaya Beli (Rp) & Aksi</th>
                         </tr>
@@ -628,7 +776,7 @@
                 </table>
             </div>
         </div>
-    </div>
+        </div>
 
     <div id="custom-alert-modal" class="modal">
         <div class="custom-alert-content">
@@ -715,16 +863,43 @@
         </div>
     </div>
     
+    <div id="modalTambahModalLainnya" class="modal">
+        <div class="modal-content" style="border-top: 5px solid var(--tertiary-color);">
+            <span class="close-button" onclick="tutupModalTambahModalLainnya()">&times;</span>
+            <h3><i class="fas fa-hard-hat"></i> Tambah Modal Lainnya (Aset)</h3>
+            <form id="form-tambah-modal-lainnya">
+                <div class="form-group">
+                    <label for="modal-nama">Nama Modal/Aset:</label>
+                    <input type="text" id="modal-nama" placeholder="Contoh: Mesin Kopi, Meja Kasir" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-kategori">Kategori:</label>
+                    <input type="text" id="modal-kategori" placeholder="Contoh: Peralatan, Furnitur" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-kuantitas">Kuantitas:</label>
+                    <input type="number" id="modal-kuantitas" class="kuantitas-input" min="1" step="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="modal-harga-satuan">Harga Satuan Beli (Rp):</label>
+                    <input type="text" id="modal-harga-satuan" class="input-rupiah" placeholder="0" oninput="formatRupiahInput(this)" required>
+                    <p class="info-text">Harga beli per unit aset modal.</p>
+                </div>
+
+                <button type="submit" class="btn btn-tertiary"><i class="fas fa-hand-holding-usd"></i> Simpan Modal Aset</button>
+            </form>
+        </div>
+    </div>
     <div id="modalEditProduk" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="tutupModalEdit()">&times;</span>
-            <h3><i class="fas fa-edit"></i> Edit Produk/Bahan</h3>
+            <h3><i class="fas fa-edit"></i> Edit Produk/Bahan/Modal</h3>
             <form id="form-edit-produk">
                 <input type="hidden" id="edit-produk-nama-lama">
                 <input type="hidden" id="edit-produk-tipe">
                 
                 <div class="form-group">
-                    <label for="edit-produk-nama">Nama Produk:</label>
+                    <label for="edit-produk-nama">Nama:</label>
                     <input type="text" id="edit-produk-nama" required>
                 </div>
                 
@@ -736,10 +911,15 @@
                     <p class="info-text">Target minimum unit produk yang Anda ingin bahan mentahnya selalu tercukupi.</p>
                 </div>
 
-                <div class="form-group" id="edit-stok-group">
-                    <label for="edit-produk-stok">Jumlah Stok:</label>
+                <div class="form-group" id="edit-stok-group"> 
+                    <label for="edit-produk-stok">Jumlah Stok/Kuantitas:</label>
                     <input type="number" id="edit-produk-stok" class="kuantitas-input" min="0" step="any" > 
                     <p class="info-text" id="info-stok-edit"></p>
+                </div>
+                
+                <div class="form-group" id="edit-kategori-group" style="display: none;">
+                    <label for="edit-modal-kategori">Kategori:</label>
+                    <input type="text" id="edit-modal-kategori" required>
                 </div>
                 
                 <div class="form-group" id="edit-harga-beli-group" style="display: none;">
@@ -780,15 +960,22 @@
         // Variabel global diinisialisasi
         let daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || [];
         let stokHistori = JSON.parse(localStorage.getItem('stokHistori')) || [];
+        // VARIABEL GLOBAL BARU
+        let modalLainnya = JSON.parse(localStorage.getItem('modalLainnya')) || [];
         
         document.addEventListener('DOMContentLoaded', () => {
-            // Coba panggil fungsi yang menampilkan data
+            // Inisialisasi filter bulan dan tahun
+            isiFilterBulan();
+            isiFilterTahun();
+            toggleFilterPeriode(); 
+
             try {
                 sinkronisasiStokDenganPenjualan();
                 tampilkanDaftarStok();
-                tampilkanTransaksiStok();
+                tampilkanModalLainnya(); 
+                tampilkanTransaksiStok(); 
+                hitungDanTampilkanTotalModal(); // FUNGSI BARU DIPANGGIL
             } catch (e) {
-                // Tangani error dan tampilkan di debug footer
                 displayErrorInFooter("Error saat memuat data: " + e.message);
                 console.error("Error saat DOMContentLoaded:", e);
             }
@@ -809,15 +996,14 @@
         // ===========================================
         
         /**
-         * Membersihkan format Rupiah (Contoh: "10.000,-" menjadi 10000)
-         * Sekarang hanya membersihkan karakter non-angka dan non-minus
+         * Membersihkan format Rupiah (Contoh: "10.000" menjadi 10000)
+         * Sekarang hanya membersihkan karakter non-angka
          * @param {string} rupiahString 
          * @returns {number}
          */
         function parseRupiah(rupiahString) {
             if (!rupiahString) return 0;
-            // Hapus semua karakter non-angka kecuali koma/titik sebagai pemisah desimal jika ada
-            // Karena ini Rupiah bulat, kita hanya ambil angka:
+            // Hapus semua karakter non-angka: . dan , dan -
             const cleanString = String(rupiahString).replace(/[^0-9]/g, ''); 
             return parseInt(cleanString) || 0;
         }
@@ -833,6 +1019,7 @@
             const sign = num < 0 ? '-' : '';
             const absNum = Math.abs(num);
             
+            // Menggunakan id-ID untuk format ribuan dengan titik (10.000)
             const formatted = new Intl.NumberFormat('id-ID').format(absNum);
             
             return `${sign}${formatted},-`;
@@ -840,9 +1027,11 @@
         
         /**
          * Fungsi yang memformat input harga menjadi format Rupiah (10000 -> 10.000) saat diketik.
+         * DENGAN PERBAIKAN: Menangani input desimal untuk kuantitas
          * @param {HTMLInputElement} input 
          */
         function formatRupiahInput(input) {
+            // Hanya izinkan angka, hapus semua yang bukan angka
             let value = input.value.replace(/[^0-9]/g, '');
             
             if (value === '') {
@@ -855,13 +1044,13 @@
                 value = value.replace(/^0+/, '');
             }
             
-            // Konversi ke angka, lalu format
             const number = parseInt(value);
             if (isNaN(number)) {
                 input.value = '';
                 return;
             }
 
+            // Format angka dengan titik sebagai pemisah ribuan
             input.value = new Intl.NumberFormat('id-ID').format(number);
         }
         
@@ -895,7 +1084,6 @@
             const year = hariIni.getFullYear();
             const month = (hariIni.getMonth() + 1).toString().padStart(2, '0');
             const day = hariIni.getDate().toString().padStart(2, '0');
-            // FIX: memastikan tidak ada spasi di antara "Tanggal" dan "Hari"
             return `${year}-${month}-${day}`;
         }
         
@@ -907,7 +1095,7 @@
             const bagianTanggal = waktuLokalString.split(',')[0].trim();
             const [day, month, year] = bagianTanggal.split('/');
             if (year && month && day) {
-                return `${year}-${month}-${day}`;
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
             }
             return ''; 
         }
@@ -981,7 +1169,69 @@
             
             window.dispatchEvent(new Event('storage'));
         }
+        
+        // FUNGSI BARU: Mencatat modal lainnya ke Halaman Keuangan
+        function catatModalLainnya(namaModal, totalBiaya) {
+            if (totalBiaya <= 0 || isNaN(totalBiaya)) {
+                return;
+            }
+
+            const tanggal = dapatkanTanggalHariIni();
+            const uniqueId = `MODAL_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+            const modalEntry = {
+                tanggal: tanggal,
+                nama: namaModal,
+                jumlah: totalBiaya,
+                idRef: uniqueId 
+            };
+
+            let modalLainnyaHpp = JSON.parse(localStorage.getItem('modalLainnyaHpp')) || [];
+            modalLainnyaHpp.push(modalEntry);
+            localStorage.setItem('modalLainnyaHpp', JSON.stringify(modalLainnyaHpp));
+            
+            window.dispatchEvent(new Event('storage'));
+        }
         // --- AKHIR FUNGSI PENTING HPP ---
+        
+        // FUNGSI BARU: HITUNG DAN TAMPILKAN TOTAL MODAL KESELURUHAN
+        function hitungDanTampilkanTotalModal() {
+            // 1. Hitung Total Modal Aset (Modal Lainnya)
+            let totalModalAset = 0;
+            modalLainnya.forEach(aset => {
+                totalModalAset += (aset.kuantitas * aset.hargaSatuan);
+            });
+            
+            // 2. Hitung Total Modal Stok (Bahan Mentah Tersisa)
+            let totalModalStok = 0;
+            const bahanMentah = daftarStok.filter(p => p.isBahanMentah);
+            bahanMentah.forEach(bahan => {
+                totalModalStok += (bahan.stok * (bahan.hargaBeli || 0));
+            });
+            
+            const totalModalKeseluruhan = totalModalAset + totalModalStok;
+
+            // 3. Tampilkan di UI
+            const container = document.getElementById('total-modal-keseluruhan');
+            container.innerHTML = `
+                <div class="modal-summary-card modal-aset">
+                    <h4><i class="fas fa-money-check-alt"></i> Total Modal Aset Tetap</h4>
+                    <strong>Rp ${formatRupiah(totalModalAset)}</strong>
+                    <p style="margin: 5px 0 0; font-size: 0.9em;">(Dari seluruh data Modal Lainnya)</p>
+                </div>
+                <div class="modal-summary-card modal-stok">
+                    <h4><i class="fas fa-warehouse"></i> Total Modal Stok Bahan</h4>
+                    <strong>Rp ${formatRupiah(totalModalStok)}</strong>
+                    <p style="margin: 5px 0 0; font-size: 0.9em;">(Stok Bahan Mentah Tersisa)</p>
+                </div>
+            `;
+            
+            // Perbarui Total Biaya Stok Keseluruhan dengan Total Modal Keseluruhan
+            document.getElementById('total-biaya-stok').innerHTML = `
+                Total Modal Keseluruhan (Aset + Stok Tersisa): <strong>Rp ${formatRupiah(totalModalKeseluruhan)}</strong>
+            `;
+        }
+
 
         // --- Fungsi Logika Bisnis (Saran, Hitung Stok, Hitung Modal) ---
         function getSaranBahanMentah(produk) {
@@ -1015,12 +1265,12 @@
 
             if (saranList.length > 0) {
                 const listHTML = saranList.map(item => 
-                    `<li><i class="fas fa-exclamation-circle"></i> **${item.nama}**: Tambah ${formatAngka(item.kurang)}</li>`
+                    `<li><i class="fas fa-exclamation-circle"></i> ${item.nama}: Tambah ${formatAngka(item.kurang)}</li>`
                 ).join('');
                 
                 return `
                     <div class="saran-stok-container saran-kurang">
-                        **Perlu Ditambah** untuk membuat min. ${formatAngka(TARGET_PRODUKSI)} unit:
+                        Perlu Ditambah untuk membuat min. ${formatAngka(TARGET_PRODUKSI)} unit:
                         <ul class="saran-list">${listHTML}</ul>
                     </div>
                 `;
@@ -1127,11 +1377,21 @@
             }
         }
         
-        // --- Transaksi Stok ---
-        function catatTransaksiStok(namaBahan, jumlahTambah, totalBiaya, hargaUnitBaru, stokBaru) {
+        // --- Transaksi Stok (Diperbarui untuk mencatat kategori) ---
+        /**
+         * Mencatat transaksi (Stok/Modal Lainnya) ke histori
+         * @param {string} kategori - 'stok' atau 'modal_lain'
+         * @param {string} namaBarang
+         * @param {number} jumlahTambah
+         * @param {number} totalBiaya
+         * @param {number} [hargaUnitBaru=null] - Harga modal rata-rata baru (khusus stok)
+         * @param {number} [stokBaru=null] - Jumlah stok baru (khusus stok)
+         */
+        function catatTransaksi(kategori, namaBarang, jumlahTambah, totalBiaya, hargaUnitBaru = null, stokBaru = null) {
             const transaksi = {
                 waktu: getWaktuLokal(),
-                nama: namaBahan,
+                kategori: kategori, // Tambahan Kategori
+                nama: namaBarang,
                 jumlah: jumlahTambah,
                 biaya: totalBiaya,
                 hargaUnitBaru: hargaUnitBaru,
@@ -1140,48 +1400,181 @@
             
             stokHistori.unshift(transaksi); 
             localStorage.setItem('stokHistori', JSON.stringify(stokHistori));
-            tampilkanTransaksiStok(); 
+            tampilkanTransaksiStok(); // Real-time update
         }
         
+        // Fungsi lama diganti dengan fungsi baru, tapi tetap dipertahankan namanya untuk kompatibilitas
+        function catatTransaksiStok(namaBahan, jumlahTambah, totalBiaya, hargaUnitBaru, stokBaru) {
+            catatTransaksi('stok', namaBahan, jumlahTambah, totalBiaya, hargaUnitBaru, stokBaru);
+        }
+
+        
+        // --- PERUBAHAN FUNGSI FILTER BULAN/TAHUN ---
+
+        function isiFilterBulan() {
+            const select = document.getElementById('filter-bulan');
+            // Menghapus option lama sebelum menambahkan yang baru jika fungsi dipanggil ulang
+            select.innerHTML = '';
+            
+            const bulanNama = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const bulanSekarang = new Date().getMonth(); // 0-11
+            
+            bulanNama.forEach((nama, index) => {
+                const option = document.createElement('option');
+                option.value = (index + 1).toString().padStart(2, '0');
+                option.textContent = nama;
+                if (index === bulanSekarang) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        }
+
+        function isiFilterTahun() {
+            const select = document.getElementById('filter-tahun');
+            // Menghapus option lama sebelum menambahkan yang baru jika fungsi dipanggil ulang
+            select.innerHTML = '';
+            
+            const tahunSekarang = new Date().getFullYear();
+            
+            // Tambahkan tahun 5 tahun ke belakang dan 5 tahun ke depan
+            for (let year = tahunSekarang - 5; year <= tahunSekarang + 5; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === tahunSekarang) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+        }
+
+        function toggleFilterPeriode() {
+            const tipe = document.getElementById('filter-tipe-transaksi').value;
+            const groupBulan = document.getElementById('group-filter-bulan');
+            const groupTahun = document.getElementById('group-filter-tahun');
+            
+            if (tipe === 'bulanan') {
+                groupBulan.style.display = 'block';
+                groupTahun.style.display = 'block';
+            } else if (tipe === 'tahunan') {
+                groupBulan.style.display = 'none';
+                groupTahun.style.display = 'block';
+            } else if (tipe === 'semua') {
+                groupBulan.style.display = 'none';
+                groupTahun.style.display = 'none';
+            }
+        }
+        
+        /**
+         * Menghitung dan menampilkan total biaya dari transaksi yang difilter.
+         * @param {Array} dataTampil - Array transaksi yang sudah difilter.
+         */
+        function hitungDanTampilkanTotalBiaya(dataTampil) {
+            const totalBiaya = dataTampil.reduce((sum, t) => sum + (t.biaya || 0), 0);
+            // Elemen ini sekarang berada di atas, di bawah judul
+            const totalBiayaElement = document.getElementById('total-biaya-stok'); 
+            
+            const tipe = document.getElementById('filter-tipe-transaksi').value;
+            const filterKategori = document.getElementById('filter-kategori-transaksi').value;
+            
+            // Akses 'selectedIndex' hanya jika elemen filter-bulan terlihat
+            const bulanFilter = document.getElementById('filter-bulan');
+            const bulanNama = bulanFilter.style.display !== 'none' ? bulanFilter.options[bulanFilter.selectedIndex]?.text : null;
+            const tahun = document.getElementById('filter-tahun').value;
+
+            let kategoriText = '';
+            if (filterKategori === 'stok') kategoriText = 'Stok Bahan';
+            else if (filterKategori === 'modal_lain') kategoriText = 'Modal Lainnya';
+            else kategoriText = 'Stok & Modal';
+
+
+            let periodeText = `Total Biaya ${kategoriText}`;
+
+            if (tipe === 'bulanan' && bulanNama && tahun) {
+                periodeText = `Total Biaya ${kategoriText} Bulan ${bulanNama} ${tahun}`;
+            } else if (tipe === 'tahunan' && tahun) {
+                periodeText = `Total Biaya ${kategoriText} Tahun ${tahun}`;
+            } else if (tipe === 'semua') {
+                 periodeText = `Total Biaya ${kategoriText} Keseluruhan`;
+            }
+            
+            // Hapus total biaya di sini, karena sudah dipindah ke hitungDanTampilkanTotalModal()
+            // Kita biarkan saja `div` ini menampung total modal keseluruhan
+            // totalBiayaElement.innerHTML = `${periodeText}: <strong>Rp ${formatRupiah(totalBiaya)}</strong>`;
+        }
+
         function tampilkanTransaksiStok() {
             const tbody = document.getElementById('transaksi-stok-table-body');
             tbody.innerHTML = '';
             
+            // Ambil filter yang sekarang berada di dalam container Riwayat Transaksi
             const filterBahan = document.getElementById('filter-bahan').value.toLowerCase().trim();
-            const filterTanggal = document.getElementById('filter-tanggal').value; 
+            const filterTipe = document.getElementById('filter-tipe-transaksi').value;
+            const filterBulan = document.getElementById('filter-bulan').value; 
+            const filterTahun = document.getElementById('filter-tahun').value;
+            const filterKategori = document.getElementById('filter-kategori-transaksi').value; 
             
             let dataTampil = stokHistori;
             
+            // 1. Filter Kategori
+            if (filterKategori !== 'semua') {
+                dataTampil = dataTampil.filter(t => t.kategori === filterKategori);
+            }
+
+            // 2. Filter Nama
             if (filterBahan) {
                 dataTampil = dataTampil.filter(t => 
                     t.nama.toLowerCase().includes(filterBahan)
                 );
             }
             
-            if (filterTanggal) {
-                dataTampil = dataTampil.filter(t => 
-                    getTanggalDariWaktuLokal(t.waktu) === filterTanggal
-                );
+            // 3. Filter Periode
+            if (filterTipe !== 'semua') {
+                dataTampil = dataTampil.filter(t => {
+                    const tanggalTransaksiStr = getTanggalDariWaktuLokal(t.waktu); 
+                    if (!tanggalTransaksiStr) return false;
+                    
+                    const [year, month] = tanggalTransaksiStr.split('-');
+                    
+                    if (filterTipe === 'bulanan') {
+                        return year === filterTahun && month === filterBulan;
+                    } else if (filterTipe === 'tahunan') {
+                        return year === filterTahun;
+                    }
+                    return true;
+                });
             }
+
+            // Panggil fungsi baru untuk menampilkan total biaya
+            hitungDanTampilkanTotalBiaya(dataTampil); 
             
             if (dataTampil.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Tidak ada transaksi penambahan stok bahan mentah yang sesuai dengan filter.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada transaksi yang sesuai dengan filter.</td></tr>';
                 return;
             }
             
-            const transaksiTerkini = dataTampil.slice(0, filterBahan || filterTanggal ? dataTampil.length : 100); 
+            const isFiltered = filterBahan || filterTipe !== 'semua' || filterKategori !== 'semua';
+            const transaksiTerkini = dataTampil.slice(0, isFiltered ? dataTampil.length : 100); 
 
             transaksiTerkini.forEach(t => {
                 const indexAsli = stokHistori.findIndex(item => item === t);
                 
+                const biayaDisplay = `Rp ${formatRupiah(t.biaya)}`;
+                let kategoriLabel = t.kategori === 'stok' ? 'Stok Bahan' : 'Modal Lain';
+                let kategoriClass = t.kategori === 'stok' ? 'transaksi-cell-add' : '';
+                
+                // Jika modal lainnya, jumlahnya adalah kuantitas
+                const jumlahDisplay = t.kategori === 'modal_lain' ? `${t.jumlah} unit` : `+ ${formatAngka(t.jumlah)}`;
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${t.waktu}</td>
+                    <td><strong>${kategoriLabel}</strong></td> <td>${t.waktu}</td>
                     <td>${t.nama}</td>
-                    <td class="transaksi-cell-add">+ ${formatAngka(t.jumlah)}</td>
+                    <td class="${kategoriClass}">${jumlahDisplay}</td>
                     <td class="transaksi-cell-cost">
-                        Rp ${formatRupiah(t.biaya)}
-                        <button class="btn btn-delete" style="padding: 5px 8px; margin-left: 10px; font-size: 0.8em;" onclick="handleHapusTransaksiStok(${indexAsli}, '${t.nama}')"><i class="fas fa-trash"></i> Hapus</button>
+                        ${biayaDisplay}
+                        <button class="btn btn-delete" style="padding: 5px 8px; margin-left: 10px; font-size: 0.8em;" onclick="handleHapusTransaksi(${indexAsli}, '${t.nama}', '${t.kategori}')"><i class="fas fa-trash"></i> Hapus</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -1189,66 +1582,146 @@
         }
         
         function resetFilterTransaksi() {
+            const tahunSekarang = new Date().getFullYear();
+            const bulanSekarang = (new Date().getMonth() + 1).toString().padStart(2, '0');
+            
+            document.getElementById('filter-tipe-transaksi').value = 'bulanan';
+            document.getElementById('filter-bulan').value = bulanSekarang;
+            document.getElementById('filter-tahun').value = tahunSekarang;
+            document.getElementById('filter-kategori-transaksi').value = 'semua'; // Reset filter kategori
+            
             document.getElementById('filter-bahan').value = '';
-            document.getElementById('filter-tanggal').value = '';
+            
+            toggleFilterPeriode(); 
             tampilkanTransaksiStok();
         }
-
-        async function handleHapusTransaksiStok(index, namaBahan) {
+        
+        // FUNGSI BARU: Menghapus Transaksi (Membedakan Stok & Modal Lainnya)
+        async function handleHapusTransaksi(index, namaBarang, kategori) {
             const transaksi = stokHistori[index];
             if (!transaksi) return;
 
             const konfirmasi = await customConfirm(
-                `Anda yakin ingin menghapus transaksi penambahan stok bahan mentah **${transaksi.nama}** sebanyak **${formatAngka(transaksi.jumlah)}** dengan total biaya **Rp ${formatRupiah(transaksi.biaya)}**? \n\nPenghapusan ini akan: \n1. Mengurangi stok bahan mentah. \n2. Menghitung ulang harga modal rata-rata bahan mentah.`, 
+                `Anda yakin ingin menghapus transaksi **${kategori === 'stok' ? 'Stok Bahan Mentah' : 'Modal Lainnya'}** atas barang **${transaksi.nama}**? \n\nPenghapusan ini akan: \n1. Mengurangi stok/aset. \n2. Menghitung ulang harga modal rata-rata (jika stok).`, 
                 "Konfirmasi Penghapusan Transaksi"
             );
 
             if (konfirmasi) {
-                const bahanStok = daftarStok.find(p => p.nama === namaBahan);
-                if (!bahanStok) {
-                    await customAlert(`Bahan mentah '${namaBahan}' tidak ditemukan di daftar stok.`, "Gagal!");
-                    return;
-                }
+                if (kategori === 'stok') {
+                    // Logika hapus untuk Stok Bahan Mentah (sama seperti sebelumnya)
+                    const bahanStok = daftarStok.find(p => p.nama === namaBarang);
+                    if (!bahanStok) {
+                        await customAlert(`Bahan mentah '${namaBarang}' tidak ditemukan.`, "Gagal!");
+                        return;
+                    }
 
-                const jumlahYangDihapus = transaksi.jumlah;
-                const totalBiayaDihapus = transaksi.biaya; 
-                
-                const stokLama = bahanStok.stok;
-                const hargaModalLama = bahanStok.hargaBeli || 0;
-                
-                // Hitung total nilai stok sebelum transaksi yang akan dihapus
-                const totalNilaiSaatIni = stokLama * hargaModalLama;
-                const totalNilaiSetelahDihapus = totalNilaiSaatIni - totalBiayaDihapus; 
-                
-                const stokBaru = stokLama - jumlahYangDihapus;
-                
-                let hargaModalBaru;
-                if (stokBaru > 0) {
-                    hargaModalBaru = totalNilaiSetelahDihapus / stokBaru;
-                } else {
-                    hargaModalBaru = 0;
+                    const jumlahYangDihapus = transaksi.jumlah;
+                    const totalBiayaDihapus = transaksi.biaya; 
+                    const stokLama = bahanStok.stok;
+                    const hargaModalLama = bahanStok.hargaBeli || 0;
+                    
+                    const totalNilaiSaatIni = stokLama * hargaModalLama;
+                    const totalNilaiSebelumTransaksi = totalNilaiSaatIni - totalBiayaDihapus; 
+                    const stokBaru = stokLama - jumlahYangDihapus;
+                    
+                    let hargaModalBaru = stokBaru > 0 ? totalNilaiSebelumTransaksi / stokBaru : 0;
+                    
+                    bahanStok.stok = Math.max(0, stokBaru); 
+                    bahanStok.hargaBeli = Math.max(0, hargaModalBaru);
+                    
+                    localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                    tampilkanDaftarStok();
+                    
+                } else if (kategori === 'modal_lain') {
+                    // Logika hapus untuk Modal Lainnya
+                    const modalIndex = modalLainnya.findIndex(m => m.nama === namaBarang && m.hargaSatuan === (transaksi.biaya / transaksi.jumlah)); 
+                    
+                    if (modalIndex !== -1) {
+                        // Jika kuantitas transaksi sama dengan kuantitas aset
+                        if (modalLainnya[modalIndex].kuantitas === transaksi.jumlah) {
+                             modalLainnya.splice(modalIndex, 1); // Hapus total aset
+                        } else {
+                            // Jika transaksi hanya sebagian dari aset
+                            modalLainnya[modalIndex].kuantitas -= transaksi.jumlah;
+                        }
+                        
+                    } else {
+                        // Kasus tidak ditemukan (mungkin data aset sudah di-edit/dihapus sebelumnya)
+                         console.warn("Aset modal tidak ditemukan untuk pembaruan kuantitas. Hanya menghapus transaksi.");
+                    }
+                    localStorage.setItem('modalLainnya', JSON.stringify(modalLainnya));
+                    tampilkanModalLainnya();
+
+                    // Hapus juga modalLainnyaHpp yang terkait
+                    let modalLainnyaHpp = JSON.parse(localStorage.getItem('modalLainnyaHpp')) || [];
+                    const hppIndex = modalLainnyaHpp.findIndex(h => h.nama === namaBarang && h.jumlah === transaksi.biaya);
+                    if (hppIndex !== -1) {
+                         modalLainnyaHpp.splice(hppIndex, 1);
+                         localStorage.setItem('modalLainnyaHpp', JSON.stringify(modalLainnyaHpp));
+                    }
                 }
-                
-                // Update data di daftarStok
-                bahanStok.stok = Math.max(0, stokBaru); 
-                bahanStok.hargaBeli = Math.max(0, hargaModalBaru);
                 
                 // Hapus transaksi dari histori
                 stokHistori.splice(index, 1);
-
-                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
                 localStorage.setItem('stokHistori', JSON.stringify(stokHistori));
-                
-                tampilkanDaftarStok();
                 tampilkanTransaksiStok(); 
+                hitungDanTampilkanTotalModal(); // Perbarui ringkasan modal setelah hapus
 
-                await customAlert(
-                    `Transaksi stok '${transaksi.nama}' berhasil dihapus. \n\n**Perubahan Stok**: ${formatAngka(stokLama)} → ${formatAngka(bahanStok.stok)} \n**Harga Modal**: Rp ${formatRupiah(hargaModalLama)} → Rp ${formatRupiah(bahanStok.hargaBeli)}`, 
-                    "Penghapusan Berhasil!"
-                );
+                await customAlert(`Transaksi '${transaksi.nama}' (${kategori}) berhasil dihapus.`, "Penghapusan Berhasil!");
             }
         }
+        
+        // FUNGSI BARU: Tampilkan Modal Lainnya
+        function tampilkanModalLainnya() {
+            const tbody = document.getElementById('modal-lainnya-table-body');
+            tbody.innerHTML = '';
+            
+            let totalNilaiAset = 0;
 
+            if (modalLainnya.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Tidak ada data Modal Lainnya (Aset Tetap).</td></tr>';
+            } else {
+                modalLainnya.forEach(aset => {
+                    const totalNilai = aset.kuantitas * aset.hargaSatuan;
+                    totalNilaiAset += totalNilai;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${aset.nama}</td>
+                        <td>${aset.kategori}</td>
+                        <td>${formatAngka(aset.kuantitas)} unit</td>
+                        <td>Rp ${formatRupiah(aset.hargaSatuan)}</td>
+                        <td><strong>Rp ${formatRupiah(totalNilai)}</strong></td>
+                        <td class="action-cell">
+                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${aset.nama}', 'modal')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-delete" onclick="handleHapusModalLainnya('${aset.nama}')"><i class="fas fa-trash"></i> Hapus</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            document.getElementById('total-aset-info').innerHTML = `Total Nilai Aset Tetap: <strong>Rp ${formatRupiah(totalNilaiAset)}</strong>`;
+            
+            localStorage.setItem('modalLainnya', JSON.stringify(modalLainnya));
+            hitungDanTampilkanTotalModal(); // Perbarui ringkasan modal
+        }
+
+        // FUNGSI BARU: Hapus Modal Lainnya
+        async function handleHapusModalLainnya(namaModal) {
+            const konfirmasi = await customConfirm(`Apakah Anda yakin ingin menghapus aset modal '${namaModal}'? Ini akan menghapus semua kuantitas aset, tetapi riwayat transaksi pembelian akan tetap ada di bagian 'Riwayat Transaksi' kecuali Anda menghapusnya dari sana.`, "Hapus Aset Modal");
+            
+            if (konfirmasi) {
+                const index = modalLainnya.findIndex(m => m.nama === namaModal);
+                if (index !== -1) {
+                    modalLainnya.splice(index, 1);
+                    localStorage.setItem('modalLainnya', JSON.stringify(modalLainnya));
+                    tampilkanModalLainnya();
+                    await customAlert("Aset modal berhasil dihapus.", "Berhasil!");
+                }
+            }
+        }
+        
         // --- Tampilan Stok ---
         function tampilkanDaftarStok() {
             const tbodyProdukJadi = document.getElementById('produk-jadi-table-body');
@@ -1278,7 +1751,7 @@
                     if (produk.bahanMentah && produk.bahanMentah.length > 0) {
                          resepHTML = `<span class="recipe-info">Resep: ${produk.bahanMentah.map(b => `${formatAngka(b.kuantitas)} ${b.nama}`).join(', ')}</span>`;
                     } else {
-                        resepHTML = '<span class="recipe-info" style="border-left: 3px solid #ffc107;">*Barang dagangan (Stok manual)</span>';
+                        resepHTML = '<span class="recipe-info" style="border-left: 3px solid #ffc107;">Barang dagangan (Stok manual)</span>';
                     }
 
                     const row = document.createElement('tr');
@@ -1288,7 +1761,7 @@
                         <td>Rp ${formatRupiah(hargaModal)}</td>
                         <td>${saranBahan}</td>
                         <td class="action-cell">
-                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${produk.nama}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${produk.nama}', 'jadi')"><i class="fas fa-edit"></i> Edit</button>
                             <button class="btn btn-delete" onclick="handleHapusStok('${produk.nama}')"><i class="fas fa-trash"></i> Hapus</button>
                         </td>
                     `;
@@ -1306,7 +1779,7 @@
                         <td>${getStokStatus(produk.stok, 'bahan')}</td>
                         <td>Rp ${formatRupiah(produk.hargaBeli || 0)}</td>
                         <td class="action-cell">
-                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${produk.nama}')"><i class="fas fa-edit"></i> Edit</button>
+                            <button class="btn btn-edit" onclick="tampilkanModalEdit('${produk.nama}', 'bahan')"><i class="fas fa-edit"></i> Edit</button>
                             <button class="btn btn-delete" onclick="handleHapusStok('${produk.nama}')"><i class="fas fa-trash"></i> Hapus</button>
                         </td>
                     `;
@@ -1316,6 +1789,7 @@
             
             localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
             updateStokBahanMentahSelect();
+            hitungDanTampilkanTotalModal(); // Perbarui ringkasan modal setelah update stok
         }
         
         // --- Perbaikan: Update Select Bahan Mentah ---
@@ -1381,6 +1855,62 @@
             document.getElementById('modalTambahProdukJadi').style.display = 'none';
         }
         
+        // FUNGSI BARU: Modal Tambah Modal Lainnya
+        function tampilkanModalTambahModalLainnya() {
+            document.getElementById('form-tambah-modal-lainnya').reset();
+            // PERBAIKAN: Reset input harga tanpa format ,-
+            document.getElementById('modal-harga-satuan').value = ''; 
+            document.getElementById('modalTambahModalLainnya').style.display = 'flex';
+        }
+
+        function tutupModalTambahModalLainnya() {
+            document.getElementById('modalTambahModalLainnya').style.display = 'none';
+        }
+        
+        // FUNGSI BARU: Event Listener Submit Modal Lainnya
+        document.getElementById('form-tambah-modal-lainnya').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const namaModal = document.getElementById('modal-nama').value.trim();
+            const kategori = document.getElementById('modal-kategori').value.trim();
+            const kuantitas = parseInt(document.getElementById('modal-kuantitas').value);
+            const hargaSatuanInput = parseRupiah(document.getElementById('modal-harga-satuan').value);
+            
+            if (!namaModal || !kategori || kuantitas <= 0 || hargaSatuanInput <= 0) {
+                 await customAlert("Silakan lengkapi semua data modal dengan benar.");
+                 return;
+            }
+
+            const totalBiayaPembelian = kuantitas * hargaSatuanInput;
+            
+            // Cek apakah aset dengan nama dan harga satuan yang sama sudah ada
+            let aset = modalLainnya.find(m => m.nama.toLowerCase() === namaModal.toLowerCase() && m.hargaSatuan === hargaSatuanInput);
+
+            if (aset) {
+                // Jika sudah ada, tambahkan kuantitasnya
+                aset.kuantitas += kuantitas;
+            } else {
+                // Jika belum ada, buat aset baru
+                const newAset = {
+                    nama: namaModal,
+                    kategori: kategori,
+                    kuantitas: kuantitas,
+                    hargaSatuan: hargaSatuanInput,
+                };
+                modalLainnya.push(newAset);
+            }
+            
+            // Catat transaksi dan HPP
+            catatModalLainnya(namaModal, totalBiayaPembelian);
+            catatTransaksi('modal_lain', namaModal, kuantitas, totalBiayaPembelian); // Gunakan kuantitas sebagai jumlah tambah
+            
+            localStorage.setItem('modalLainnya', JSON.stringify(modalLainnya));
+            tutupModalTambahModalLainnya();
+            tampilkanModalLainnya();
+            await customAlert(`Modal Lainnya '${namaModal}' (${kategori}) berhasil ditambahkan. Total Biaya: Rp ${formatRupiah(totalBiayaPembelian)}`, "Berhasil Menambah Modal!");
+        });
+
+
         function tambahInputBahanMentah(tipe = 'tambah', namaBahan = '', kuantitas = '') {
             const bahanMentahListId = tipe === 'edit' ? 'edit-bahan-mentah-list' : 'bahan-mentah-list';
             const bahanMentahList = document.getElementById(bahanMentahListId);
@@ -1453,7 +1983,7 @@
             
             if (bahanMentah.length === 0) {
                  const konfirmasiStok = await customConfirm(
-                    `Produk '${namaProduk}' adalah **barang dagangan/non-produksi** (tanpa resep). Lanjutkan untuk memasukkan Stok Awal dan Harga Modal?`, 
+                    `Produk '${namaProduk}' adalah barang dagangan/non-produksi (tanpa resep). Lanjutkan untuk memasukkan Stok Awal dan Harga Modal?`, 
                     "Konfirmasi Barang Dagangan"
                  );
                  if (!konfirmasiStok) return;
@@ -1560,7 +2090,7 @@
                         return;
                     }
                 } else {
-                    await customAlert("Silakan pilih bahan mentah dari daftar atau klik '+ Bahan Baru' untuk memasukkan nama baru.");
+                    await customAlert("Silakan pilih bahan mentah dari daftar atau klik 'Bahan Baru' untuk memasukkan nama baru.");
                     return;
                 }
             } else if (!produk.isBahanMentah) {
@@ -1585,53 +2115,92 @@
             await customAlert(`Stok bahan mentah '${produk.nama}' berhasil diperbarui. Stok baru: ${formatAngka(produk.stok)}. Harga modal rata-rata: Rp ${formatRupiah(produk.hargaBeli)}`, "Berhasil Menambah Stok!");
         });
 
-        // --- Edit dan Hapus Produk ---
-        function tampilkanModalEdit(namaProduk) {
-            const produk = daftarStok.find(p => p.nama === namaProduk);
+        // --- Edit dan Hapus Produk (Diperbarui untuk Modal Lainnya) ---
+        function tampilkanModalEdit(namaProduk, tipeAwal) {
+            let produk;
+
+            if (tipeAwal === 'modal') {
+                produk = modalLainnya.find(m => m.nama === namaProduk);
+            } else {
+                produk = daftarStok.find(p => p.nama === namaProduk);
+            }
+            
             if (!produk) return;
             
             document.getElementById('edit-produk-nama-lama').value = produk.nama;
             document.getElementById('edit-produk-nama').value = produk.nama;
-            document.getElementById('edit-produk-tipe').value = produk.isBahanMentah ? 'bahan' : 'jadi';
+            document.getElementById('edit-produk-tipe').value = tipeAwal; // 'bahan', 'jadi', atau 'modal'
             
             const infoStokEdit = document.getElementById('info-stok-edit');
             const editStokInput = document.getElementById('edit-produk-stok');
             const editHargaBeliInput = document.getElementById('edit-produk-harga-beli');
+            const editKategoriInput = document.getElementById('edit-modal-kategori');
             
             const editStokGroup = document.getElementById('edit-stok-group');
             const editHargaBeliGroup = document.getElementById('edit-harga-beli-group');
             const editBahanMentahGroup = document.getElementById('edit-bahan-mentah-group');
             const editModalCostInfo = document.getElementById('edit-modal-cost-info');
             const editTargetStokGroup = document.getElementById('edit-target-stok-group');
+            const editKategoriGroup = document.getElementById('edit-kategori-group');
 
+            // Reset tampilan
             editStokInput.removeAttribute('required');
             editHargaBeliInput.removeAttribute('required');
-            
+            editKategoriInput.removeAttribute('required');
             document.getElementById('edit-bahan-mentah-list').innerHTML = '';
             editModalCostInfo.style.display = 'none';
             editTargetStokGroup.style.display = 'none';
+            editBahanMentahGroup.style.display = 'none';
+            editKategoriGroup.style.display = 'none';
             editStokGroup.style.display = 'block';
+            editHargaBeliGroup.style.display = 'none';
 
-            if (produk.isBahanMentah) {
+
+            if (tipeAwal === 'modal') {
+                // Edit Modal Lainnya
+                editStokGroup.style.display = 'block';
+                editHargaBeliGroup.style.display = 'block';
+                editKategoriGroup.style.display = 'block';
+                
+                editStokInput.value = formatAngka(produk.kuantitas); 
+                editStokInput.setAttribute('required', 'required'); 
+                infoStokEdit.textContent = 'Ini adalah kuantitas aset yang Anda miliki. Ubah nilai ini untuk koreksi data.';
+
+                editHargaBeliInput.value = new Intl.NumberFormat('id-ID').format(Math.round(produk.hargaSatuan || 0)); 
+                editHargaBeliInput.setAttribute('required', 'required'); 
+                document.querySelector('#edit-harga-beli-group label').textContent = 'Harga Satuan (Rp):';
+                document.querySelector('#edit-harga-beli-group p').textContent = 'Harga ini adalah harga satuan beli aset.';
+
+                editKategoriInput.value = produk.kategori;
+                editKategoriInput.setAttribute('required', 'required');
+                
+                editModalCostInfo.style.display = 'block';
+                editModalCostInfo.innerHTML = `Total Nilai Aset: <strong>Rp ${formatRupiah(produk.kuantitas * produk.hargaSatuan)}</strong>`;
+
+            } else if (produk.isBahanMentah) {
+                // Edit Bahan Mentah
                 editStokInput.value = formatAngka(produk.stok); 
-                // PERBAIKAN: Tampilkan harga modal Rata-rata dalam format Rupiah (10.000) untuk diedit
                 editHargaBeliInput.value = new Intl.NumberFormat('id-ID').format(Math.round(produk.hargaBeli || 0)); 
                 infoStokEdit.textContent = 'Ini adalah stok fisik. Ubah nilai ini untuk koreksi data.';
+                
+                document.querySelector('#edit-harga-beli-group label').textContent = 'Harga Modal Rata-rata per Unit (Rp):';
+                document.querySelector('#edit-harga-beli-group p').textContent = 'Harga ini adalah rata-rata tertimbang. Hanya ubah jika ada koreksi data.';
+
                 editHargaBeliGroup.style.display = 'block';
                 editStokInput.setAttribute('required', 'required'); 
                 editHargaBeliInput.setAttribute('required', 'required'); 
 
-                editBahanMentahGroup.style.display = 'none';
                 editModalCostInfo.style.display = 'block';
-                editModalCostInfo.innerHTML = `Harga Modal Rata-rata saat ini: **Rp ${formatRupiah(produk.hargaBeli)}**`;
+                editModalCostInfo.innerHTML = `Harga Modal Rata-rata saat ini: <strong>Rp ${formatRupiah(produk.hargaBeli)}</strong>`;
                 
             } else {
+                // Edit Produk Jadi
                 const hargaModalOtomatis = hitungHargaModalProdukJadi(produk);
                 document.getElementById('edit-target-stok-minimal').value = produk.targetStokMinimal || 10;
                 editTargetStokGroup.style.display = 'block';
                 
                 editModalCostInfo.style.display = 'block';
-                editModalCostInfo.innerHTML = `Harga Modal Otomatis (Resep): **Rp ${formatRupiah(hargaModalOtomatis)}**`;
+                editModalCostInfo.innerHTML = `Harga Modal Otomatis (Resep): <strong>Rp ${formatRupiah(hargaModalOtomatis)}</strong>`;
                 
                 if (produk.bahanMentah && produk.bahanMentah.length > 0) {
                     editStokGroup.style.display = 'none'; 
@@ -1646,14 +2215,15 @@
                 } else {
                     editStokGroup.style.display = 'block';
                     editStokInput.value = formatAngka(produk.stok); 
-                    // PERBAIKAN: Tampilkan harga modal Rata-rata dalam format Rupiah (10.000) untuk diedit
                     editHargaBeliInput.value = new Intl.NumberFormat('id-ID').format(Math.round(produk.hargaBeli || 0)); 
                     editHargaBeliGroup.style.display = 'block';
                     editStokInput.setAttribute('required', 'required'); 
                     editHargaBeliInput.setAttribute('required', 'required'); 
 
                     infoStokEdit.textContent = 'Ini adalah stok barang dagangan. Stok dan Harga Modal dapat diubah manual.';
-                    editBahanMentahGroup.style.display = 'none';
+                    document.querySelector('#edit-harga-beli-group label').textContent = 'Harga Modal Beli per Unit (Rp):';
+                    document.querySelector('#edit-harga-beli-group p').textContent = 'Harga ini adalah harga modal/beli per unit.';
+
                 }
             }
 
@@ -1673,52 +2243,73 @@
 
             const stokInput = document.getElementById('edit-produk-stok');
             const hargaBeliInput = document.getElementById('edit-produk-harga-beli');
+            const kategoriInput = document.getElementById('edit-modal-kategori');
             
             // Mengambil nilai murni dengan membersihkan format Rupiah dari input
             const stokBaru = stokInput.parentNode.style.display !== 'none' ? parseFloat(stokInput.value.replace(/[^0-9.]/g, '')) : undefined; 
             const hargaBeliBaruRupiah = hargaBeliInput.parentNode.style.display !== 'none' ? parseRupiah(hargaBeliInput.value) : undefined; 
+            const kategoriBaru = kategoriInput.parentNode.style.display !== 'none' ? kategoriInput.value.trim() : undefined;
+
 
             // Validasi nilai
-            if (stokBaru !== undefined && isNaN(stokBaru)) { await customAlert("Nilai Stok tidak valid."); return; }
-            if (hargaBeliBaruRupiah !== undefined && isNaN(hargaBeliBaruRupiah)) { await customAlert("Nilai Harga Modal tidak valid."); return; }
+            if (stokBaru !== undefined && isNaN(stokBaru)) { await customAlert("Nilai Stok/Kuantitas tidak valid."); return; }
+            if (hargaBeliBaruRupiah !== undefined && isNaN(hargaBeliBaruRupiah)) { await customAlert("Nilai Harga Modal/Satuan tidak valid."); return; }
 
 
-            const produkIndex = daftarStok.findIndex(p => p.nama === namaLama);
-            if (produkIndex !== -1) {
-                daftarStok[produkIndex].nama = namaBaru;
-                daftarStok[produkIndex].targetStokMinimal = targetStokMinimalBaru; 
+            if (tipeProduk === 'modal') {
+                // Edit Modal Lainnya
+                const asetIndex = modalLainnya.findIndex(m => m.nama === namaLama);
+                if (asetIndex !== -1) {
+                    modalLainnya[asetIndex].nama = namaBaru;
+                    if (stokBaru !== undefined) modalLainnya[asetIndex].kuantitas = stokBaru;
+                    if (hargaBeliBaruRupiah !== undefined) modalLainnya[asetIndex].hargaSatuan = hargaBeliBaruRupiah;
+                    if (kategoriBaru !== undefined) modalLainnya[asetIndex].kategori = kategoriBaru;
 
-                if (tipeProduk === 'bahan' || (tipeProduk === 'jadi' && daftarStok[produkIndex].bahanMentah.length === 0)) {
-                    if (stokBaru !== undefined) daftarStok[produkIndex].stok = stokBaru;
-                    // Menggunakan hargaBeliBaruRupiah yang sudah dibersihkan
-                    if (hargaBeliBaruRupiah !== undefined) daftarStok[produkIndex].hargaBeli = hargaBeliBaruRupiah;
+                    localStorage.setItem('modalLainnya', JSON.stringify(modalLainnya));
+                    tampilkanModalLainnya();
+                    await customAlert(`Aset Modal '${namaLama}' berhasil diperbarui.`, "Berhasil!");
                 }
-                
-                if (tipeProduk === 'jadi') {
-                    let bahanMentahBaru = [];
-                    const bahanInputs = document.querySelectorAll('#edit-bahan-mentah-list .bahan-mentah-item');
-                    bahanInputs.forEach(item => {
-                        const select = item.querySelector('.select-bahan-mentah');
-                        const input = item.querySelector('.kuantitas-bahan-mentah');
-                        const namaBahan = select.value;
-                        const kuantitasBahan = parseFloat(input.value);
-                        if (namaBahan && kuantitasBahan > 0) {
-                            bahanMentahBaru.push({ nama: namaBahan, kuantitas: kuantitasBahan });
-                        }
-                    });
-                    
-                    daftarStok[produkIndex].bahanMentah = bahanMentahBaru;
-                    
-                    if (bahanMentahBaru.length > 0) {
-                         daftarStok[produkIndex].hargaBeli = hitungHargaModalProdukJadi(daftarStok[produkIndex]);
+            } else {
+                // Edit Bahan Mentah / Produk Jadi
+                const produkIndex = daftarStok.findIndex(p => p.nama === namaLama);
+                if (produkIndex !== -1) {
+                    daftarStok[produkIndex].nama = namaBaru;
+                    daftarStok[produkIndex].targetStokMinimal = targetStokMinimalBaru; 
+
+                    const produk = daftarStok[produkIndex];
+
+                    if (produk.isBahanMentah || (tipeProduk === 'jadi' && produk.bahanMentah.length === 0)) {
+                        if (stokBaru !== undefined) produk.stok = stokBaru;
+                        if (hargaBeliBaruRupiah !== undefined) produk.hargaBeli = hargaBeliBaruRupiah;
                     }
-                }
+                    
+                    if (tipeProduk === 'jadi') {
+                        let bahanMentahBaru = [];
+                        const bahanInputs = document.querySelectorAll('#edit-bahan-mentah-list .bahan-mentah-item');
+                        bahanInputs.forEach(item => {
+                            const select = item.querySelector('.select-bahan-mentah');
+                            const input = item.querySelector('.kuantitas-bahan-mentah');
+                            const namaBahan = select.value;
+                            const kuantitasBahan = parseFloat(input.value);
+                            if (namaBahan && kuantitasBahan > 0) {
+                                bahanMentahBaru.push({ nama: namaBahan, kuantitas: kuantitasBahan });
+                            }
+                        });
+                        
+                        produk.bahanMentah = bahanMentahBaru;
+                        
+                        if (bahanMentahBaru.length > 0) {
+                             produk.hargaBeli = hitungHargaModalProdukJadi(produk);
+                        }
+                    }
 
-                localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
-                tampilkanDaftarStok();
-                tutupModalEdit();
-                await customAlert(`Produk '${namaLama}' berhasil diperbarui.`, "Berhasil!");
+                    localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                    tampilkanDaftarStok();
+                    await customAlert(`Produk '${namaLama}' berhasil diperbarui.`, "Berhasil!");
+                }
             }
+
+            tutupModalEdit();
         });
 
         async function handleHapusStok(namaProduk) {
@@ -1744,7 +2335,7 @@
             if (!file) return;
 
             const konfirmasi = await customConfirm(
-                "Anda yakin ingin mengimpor transaksi kulakan? Ini akan **menambah** stok, menghitung ulang modal rata-rata, dan mencatat HPP.",
+                "Anda yakin ingin mengimpor transaksi kulakan? Ini akan menambah stok, menghitung ulang modal rata-rata, dan mencatat HPP.",
                 "Konfirmasi Impor Transaksi Kulakan"
             );
 
@@ -1774,7 +2365,6 @@
                         const biayaStr = row['Total Biaya Beli'] ? row['Total Biaya Beli'].replace(/,/g, '.') : '0';
                         
                         const jumlah = parseFloat(jumlahStr);
-                        // Menggunakan parseFloat agar bisa membaca angka desimal dari CSV
                         const biaya = parseFloat(biayaStr.replace(/[^0-9.]/g, '')) || 0; 
                         
                         if (!nama || isNaN(jumlah) || jumlah <= 0 || isNaN(biaya) || biaya < 0) {
@@ -1814,9 +2404,9 @@
                     localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
                     tampilkanDaftarStok();
                     
-                    let message = `✅ Berhasil mengimpor ${importedCount} transaksi kulakan.`;
+                    let message = `Berhasil mengimpor ${importedCount} transaksi kulakan.`;
                     if (errors.length > 0) {
-                        message += `\n\n⚠️ Terdapat ${errors.length} baris yang gagal diimpor. Lihat console log untuk detail kesalahan.`;
+                        message += `\n\nTerdapat ${errors.length} baris yang gagal diimpor. Lihat console log untuk detail kesalahan.`;
                         console.error("Detail Kesalahan Impor Transaksi:", errors);
                     }
                     await customAlert(message, "Impor Selesai");
@@ -1830,13 +2420,14 @@
 
 
         function exportDataUntukKaryawan() {
-            if (daftarStok.length === 0) {
-                customAlert("Tidak ada data stok untuk diekspor.");
+            if (daftarStok.length === 0 && modalLainnya.length === 0) {
+                customAlert("Tidak ada data stok/modal untuk diekspor.");
                 return;
             }
 
             const dataExport = [];
             
+            // 1. Data Stok
             daftarStok.forEach(produk => {
                 let saran = 'N/A';
                 let stokSaatIni = formatAngka(produk.stok); 
@@ -1893,10 +2484,21 @@
                 dataExport.push({
                     "Nama Produk/Bahan": produk.nama,
                     "Tipe": produk.isBahanMentah ? "Bahan Mentah" : "Produk Jadi",
-                    "Stok Tersedia Saat Ini": stokSaatIni,
-                    "Saran & Status Stok": saran
+                    "Stok/Kuantitas Tersedia": stokSaatIni,
+                    "Saran & Status": saran
                 });
             });
+            
+            // 2. Data Modal Lainnya (Aset)
+            modalLainnya.forEach(aset => {
+                 dataExport.push({
+                    "Nama Produk/Bahan": aset.nama,
+                    "Tipe": `Modal Lainnya - ${aset.kategori}`,
+                    "Stok/Kuantitas Tersedia": formatAngka(aset.kuantitas),
+                    "Saran & Status": `Aset Aktif`
+                 });
+            });
+
 
             const csv = Papa.unparse(dataExport, {
                 quotes: true,
@@ -1917,12 +2519,18 @@
 
 
         function exportFullData() {
-            if (daftarStok.length === 0) {
-                customAlert("Tidak ada data stok untuk diekspor.");
+            if (daftarStok.length === 0 && modalLainnya.length === 0) {
+                customAlert("Tidak ada data stok/modal untuk diekspor.");
                 return;
             }
             
-            const dataString = JSON.stringify(daftarStok, null, 2);
+            const dataPenuh = {
+                daftarStok: daftarStok,
+                stokHistori: stokHistori,
+                modalLainnya: modalLainnya, // EKSPOR DATA MODAL LAINNYA
+            }
+            
+            const dataString = JSON.stringify(dataPenuh, null, 2);
             
             const blob = new Blob([dataString], { type: 'application/json' });
             const link = document.createElement('a');
@@ -1931,7 +2539,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            customAlert("Data Stok Penuh (Produk & Resep) berhasil diekspor sebagai JSON.", "Ekspor Berhasil");
+            customAlert("Data Stok Penuh (Produk, Resep, Histori, Modal) berhasil diekspor sebagai JSON.", "Ekspor Berhasil");
         }
 
         function handleImportFull(event) {
@@ -1943,23 +2551,27 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
 
-                    if (!Array.isArray(importedData) || importedData.length === 0 || !importedData[0].hasOwnProperty('nama')) {
+                    if (!importedData.hasOwnProperty('daftarStok')) {
                         await customAlert("Struktur file JSON tidak valid. Pastikan ini adalah file Data Stok Penuh yang benar.", "Gagal Impor");
                         return;
                     }
 
                     const konfirmasi = await customConfirm(
-                        "Anda yakin ingin mengimpor Data Stok Penuh? Ini akan **MENIMPA** semua Produk, Resep, Stok, dan Harga Modal rata-rata yang ada saat ini!",
+                        "Anda yakin ingin mengimpor Data Stok Penuh? Ini akan MENIMPA semua Produk, Resep, Stok, Histori Kulakan, dan Modal Lainnya yang ada saat ini!",
                         "Konfirmasi Impor Penuh"
                     );
 
                     if (konfirmasi) {
-                        daftarStok = importedData;
-                        localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                        daftarStok = importedData.daftarStok || [];
+                        stokHistori = importedData.stokHistori || [];
+                        modalLainnya = importedData.modalLainnya || []; // IMPOR DATA MODAL LAINNYA
                         
-                        localStorage.removeItem('stokHistori'); 
+                        localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
+                        localStorage.setItem('stokHistori', JSON.stringify(stokHistori));
+                        localStorage.setItem('modalLainnya', JSON.stringify(modalLainnya));
                         
                         tampilkanDaftarStok();
+                        tampilkanModalLainnya();
                         tampilkanTransaksiStok();
                         await customAlert("Data Stok Penuh berhasil diimpor dan menimpa data lama.", "Berhasil!");
                     }
@@ -1974,7 +2586,7 @@
         
         async function resetSemuaData() {
             const konfirmasi = await customConfirm(
-                "⚠️ **PERINGATAN KERAS!** ⚠️ \n\nAnda yakin ingin menghapus **SEMUA** data yang tersimpan di Manajemen Stok (Daftar Stok, Resep, Histori Kulakan) dan data modal/HPP di halaman Keuangan? \n\n**Tindakan ini tidak dapat dibatalkan.**",
+                "PERINGATAN KERAS! \n\nAnda yakin ingin menghapus SEMUA data yang tersimpan di Manajemen Stok (Daftar Stok, Resep, Histori Kulakan) dan data modal/HPP di halaman Keuangan? \n\nTindakan ini tidak dapat dibatalkan.",
                 "RESET SEMUA DATA STOK & HPP"
             );
 
@@ -1982,12 +2594,17 @@
                 localStorage.removeItem('daftarStok');
                 localStorage.removeItem('stokHistori');
                 localStorage.removeItem('modalStokBaru'); 
+                localStorage.removeItem('modalLainnya'); // RESET MODAL LAINNYA
+                localStorage.removeItem('modalLainnyaHpp'); // RESET MODAL LAINNYA HPP
                 
                 daftarStok = [];
                 stokHistori = [];
+                modalLainnya = [];
                 
                 tampilkanDaftarStok();
+                tampilkanModalLainnya();
                 tampilkanTransaksiStok();
+                hitungDanTampilkanTotalModal(); // Perbarui ringkasan modal setelah reset
                 
                 await customAlert("Semua data manajemen stok berhasil direset.", "Reset Berhasil! 🗑️");
             }
