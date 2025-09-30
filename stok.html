@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Stok</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        /* [STYLES TETAP SAMA SEPERTI ASLINYA] */
+        /* CSS yang Anda sediakan (Dibuat lebih rapi dan menggunakan variabel CSS) */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
         :root {
@@ -17,7 +16,7 @@
             --secondary-color: #28a745; 
             --background-light: #f8f9fa; 
             --card-background: #ffffff;
-            --text-color: #343a40;
+            --text-color: #343a30;
             --border-color: #e9ecef;
             --shadow-color: rgba(0, 0, 0, 0.1);
             --danger-color: #dc3545;
@@ -97,6 +96,9 @@
             transition: background-color 0.3s, transform 0.1s;
             color: white;
             background-color: var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .btn:hover {
@@ -111,7 +113,7 @@
             background-color: #1e7e34;
         }
         
-        .btn-danger-custom { /* Styling baru untuk tombol reset */
+        .btn-danger-custom { 
             background-color: var(--danger-color);
         }
         .btn-danger-custom:hover {
@@ -142,6 +144,9 @@
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.9em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         tr:last-child td {
@@ -216,7 +221,7 @@
         }
         .transaksi-cell-cost {
             color: var(--primary-dark);
-            display: flex; /* Untuk menempatkan tombol Hapus di sebelah biaya */
+            display: flex;
             justify-content: space-between;
             align-items: center;
         }
@@ -245,6 +250,7 @@
             position: relative;
             max-height: 90vh; 
             overflow-y: auto;
+            border-top: 5px solid var(--primary-color); 
         }
         .custom-alert-content {
             background-color: var(--card-background);
@@ -254,6 +260,7 @@
             max-width: 400px;
             padding: 25px;
             text-align: center;
+            border-top: 5px solid var(--primary-color);
         }
         .custom-alert-content h4 {
             color: var(--primary-dark);
@@ -332,6 +339,16 @@
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
             outline: none;
         }
+        /* Style baru untuk input harga Rupiah */
+        .input-rupiah {
+            text-align: right;
+            font-weight: 600;
+        }
+        /* Style untuk input kuantitas desimal */
+        .kuantitas-input {
+            text-align: left;
+        }
+
 
         .info-text {
             font-size: 0.85em;
@@ -372,6 +389,9 @@
             border-radius: 6px;
             cursor: pointer;
             border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
         .btn-add-bahan:hover {
             background-color: #5a6268;
@@ -437,6 +457,73 @@
             border: 1px solid #ced4da;
             border-radius: 5px;
             box-sizing: border-box;
+        }
+
+        /* Gaya untuk Peringatan Error di footer */
+        .footer-debug {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            font-family: monospace;
+            font-size: 0.9em;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        .debug-error {
+            color: #ff5555;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .debug-error i {
+            font-size: 1.2em;
+        }
+        
+        .footer-menu {
+             /* Mereplikasi bagian 'Menghibur' dari gambar, tapi ditaruh di atas debug untuk visibilitas */
+            background-color: white;
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            position: fixed;
+            bottom: 40px; /* Di atas debug panel */
+            width: 100%;
+            max-width: 1200px;
+            z-index: 99;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-bottom: 15px;
+            }
+            .header a {
+                margin-bottom: 10px;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            th, td {
+                padding: 10px 8px;
+            }
         }
     </style>
 </head>
@@ -558,27 +645,27 @@
     <div id="modalTambahProdukJadi" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="tutupModalTambahProdukJadi()">&times;</span>
-            <h3>Tambah Produk Jadi Baru</h3>
+            <h3><i class="fas fa-box-open"></i> Tambah Produk Jadi Baru</h3>
             <form id="form-tambah-produk-jadi">
                 <div class="form-group">
                     <label for="produk-nama">Nama Produk:</label>
-                    <input type="text" id="produk-nama" required>
+                    <input type="text" id="produk-nama" placeholder="Contoh: Kopi Susu Aren" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="target-stok-minimal">Target Stok Minimal (Unit):</label>
-                    <input type="number" id="target-stok-minimal" min="1" step="1" value="10" required>
+                    <input type="number" id="target-stok-minimal" class="kuantitas-input" min="1" step="1" value="10" required>
                     <p class="info-text">Jumlah unit produk yang Anda ingin bahan mentahnya selalu tersedia.</p>
                 </div>
                 
                 <div class="recipe-section">
-                    <h4>Resep: Bahan Mentah yang Dibutuhkan untuk membuat 1 unit (Tidak Wajib)</h4>
+                    <h4><i class="fas fa-list-alt"></i> Resep: Bahan Mentah per 1 unit</h4>
                     <div id="bahan-mentah-list"></div>
                     <button type="button" class="btn-add-bahan" onclick="tambahInputBahanMentah()">+ Tambah Bahan</button>
-                    <p class="info-text">Masukkan kuantitas desimal (contoh: 0.005 atau 0.0001) jika diperlukan.</p>
+                    <p class="info-text">Kosongkan resep jika produk adalah barang dagangan (non-produksi).</p>
                 </div>
                 
-                <button type="submit" class="btn" style="margin-top: 25px;">Simpan Produk Jadi</button>
+                <button type="submit" class="btn" style="margin-top: 25px;"><i class="fas fa-save"></i> Simpan Produk Jadi</button>
             </form>
         </div>
     </div>
@@ -586,7 +673,7 @@
     <div id="modalTambahStokBahan" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="tutupModalTambahStokBahan()">&times;</span>
-            <h3>Tambah Stok Bahan Mentah</h3>
+            <h3><i class="fas fa-seedling"></i> Tambah Stok Bahan Mentah</h3>
             <form id="form-tambah-stok-bahan">
                 <div class="form-group">
                     <label for="stok-bahan-input-container">Pilih atau Masukkan Nama Bahan Mentah:</label>
@@ -598,32 +685,32 @@
                         
                         <input type="text" id="stok-bahan-nama-baru" placeholder="Nama bahan baru..." style="display: none;">
                         
-                        <button type="button" class="btn-toggle-input" id="btn-toggle-input" onclick="toggleInputBahanMentah()">+ Bahan Baru</button>
+                        <button type="button" class="btn-toggle-input" id="btn-toggle-input" onclick="toggleInputBahanMentah()"><i class="fas fa-plus"></i> Bahan Baru</button>
                     </div>
 
                     <p class="info-text" id="info-bahan-mentah">Pilih dari daftar bahan yang sudah ada.</p>
                 </div>
                 <div class="form-group">
                     <label for="stok-bahan-jumlah">Jumlah (Kuantitas) yang Ditambahkan:</label>
-                    <input type="number" id="stok-bahan-jumlah" min="0.00001" step="any" required>
+                    <input type="number" id="stok-bahan-jumlah" class="kuantitas-input" min="0.00001" step="any" required>
                 </div>
 
                 <div class="form-group">
                     <label>Harga Beli (Pilih salah satu untuk perhitungan modal rata-rata):</label>
                     <div class="harga-input-group">
                         <div>
-                            <label for="stok-bahan-harga-per-unit">Harga Beli per Unit:</label>
-                            <input type="number" id="stok-bahan-harga-per-unit" min="0" value="0" step="any">
+                            <label for="stok-bahan-harga-per-unit">Harga Beli per Unit (Rp):</label>
+                            <input type="text" id="stok-bahan-harga-per-unit" class="input-rupiah" placeholder="0" oninput="formatRupiahInput(this)">
                         </div>
                         <div>
-                            <label for="stok-bahan-harga-per-paket">Harga Beli Total (untuk jumlah di atas):</label>
-                            <input type="number" id="stok-bahan-harga-per-paket" min="0" value="0" step="any">
+                            <label for="stok-bahan-harga-per-paket">Harga Beli Total (Rp):</label>
+                            <input type="text" id="stok-bahan-harga-per-paket" class="input-rupiah" placeholder="0" oninput="formatRupiahInput(this)">
                         </div>
                     </div>
                     <p class="info-text">Harga modal rata-rata akan diperbarui secara otomatis menggunakan metode rata-rata tertimbang.</p>
                 </div>
 
-                <button type="submit" class="btn btn-secondary">Simpan Stok Bahan</button>
+                <button type="submit" class="btn btn-secondary"><i class="fas fa-plus-square"></i> Simpan Stok Bahan</button>
             </form>
         </div>
     </div>
@@ -631,7 +718,7 @@
     <div id="modalEditProduk" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="tutupModalEdit()">&times;</span>
-            <h3>Edit Produk/Bahan</h3>
+            <h3><i class="fas fa-edit"></i> Edit Produk/Bahan</h3>
             <form id="form-edit-produk">
                 <input type="hidden" id="edit-produk-nama-lama">
                 <input type="hidden" id="edit-produk-tipe">
@@ -645,19 +732,19 @@
 
                 <div class="form-group" id="edit-target-stok-group" style="display: none;">
                     <label for="edit-target-stok-minimal">Target Stok Minimal (Unit):</label>
-                    <input type="number" id="edit-target-stok-minimal" min="1" step="1" required>
+                    <input type="number" id="edit-target-stok-minimal" class="kuantitas-input" min="1" step="1" required>
                     <p class="info-text">Target minimum unit produk yang Anda ingin bahan mentahnya selalu tercukupi.</p>
                 </div>
 
                 <div class="form-group" id="edit-stok-group">
                     <label for="edit-produk-stok">Jumlah Stok:</label>
-                    <input type="number" id="edit-produk-stok" min="0" step="any" > 
+                    <input type="number" id="edit-produk-stok" class="kuantitas-input" min="0" step="any" > 
                     <p class="info-text" id="info-stok-edit"></p>
                 </div>
                 
                 <div class="form-group" id="edit-harga-beli-group" style="display: none;">
-                    <label for="edit-produk-harga-beli">Harga Modal Rata-rata per Unit:</label>
-                    <input type="number" id="edit-produk-harga-beli" min="0" step="any" > 
+                    <label for="edit-produk-harga-beli">Harga Modal Rata-rata per Unit (Rp):</label>
+                    <input type="text" id="edit-produk-harga-beli" class="input-rupiah" placeholder="0" oninput="formatRupiahInput(this)"> 
                     <p class="info-text">Harga ini adalah rata-rata tertimbang. Hanya ubah jika ada koreksi data.</p>
                 </div>
                 
@@ -667,22 +754,165 @@
                     <button type="button" class="btn-add-bahan" onclick="tambahInputBahanMentah('edit')">+ Tambah Bahan</button>
                 </div>
 
-                <button type="submit" class="btn" style="margin-top: 20px;">Simpan Perubahan</button>
+                <button type="submit" class="btn" style="margin-top: 20px;"><i class="fas fa-save"></i> Simpan Perubahan</button>
             </form>
         </div>
     </div>
 
+    <div class="footer-debug" id="debug-footer">
+        <div class="footer-menu">
+            <strong>Menghibur</strong>
+            <span style="float: right;">
+                bersih
+                <a href="#" style="color: #ccc; text-decoration: none; margin-left: 10px;">&lt;</a>
+            </span>
+        </div>
+
+        <div class="debug-error" id="error-message-display" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i> <span id="error-text"></span>
+        </div>
+        <pre>&gt;</pre>
+    </div>
+
 
     <script>
+        // --- Perbaikan Utama untuk Error Syntax di gambar Anda ---
+        // Variabel global diinisialisasi
         let daftarStok = JSON.parse(localStorage.getItem('daftarStok')) || [];
         let stokHistori = JSON.parse(localStorage.getItem('stokHistori')) || [];
         
         document.addEventListener('DOMContentLoaded', () => {
-            sinkronisasiStokDenganPenjualan();
-            tampilkanDaftarStok();
-            tampilkanTransaksiStok();
+            // Coba panggil fungsi yang menampilkan data
+            try {
+                sinkronisasiStokDenganPenjualan();
+                tampilkanDaftarStok();
+                tampilkanTransaksiStok();
+            } catch (e) {
+                // Tangani error dan tampilkan di debug footer
+                displayErrorInFooter("Error saat memuat data: " + e.message);
+                console.error("Error saat DOMContentLoaded:", e);
+            }
         });
+        
+        /**
+         * Fungsi untuk menampilkan pesan error di footer
+         * @param {string} message - Pesan error
+         */
+        function displayErrorInFooter(message) {
+            const errorMessageDisplay = document.getElementById('error-message-display');
+            document.getElementById('error-text').textContent = message;
+            errorMessageDisplay.style.display = 'flex';
+        }
+        
+        // ===========================================
+        // FUNGSI FORMATTING DAN UTILITY (Diperbarui)
+        // ===========================================
+        
+        /**
+         * Membersihkan format Rupiah (Contoh: "10.000,-" menjadi 10000)
+         * Sekarang hanya membersihkan karakter non-angka dan non-minus
+         * @param {string} rupiahString 
+         * @returns {number}
+         */
+        function parseRupiah(rupiahString) {
+            if (!rupiahString) return 0;
+            // Hapus semua karakter non-angka kecuali koma/titik sebagai pemisah desimal jika ada
+            // Karena ini Rupiah bulat, kita hanya ambil angka:
+            const cleanString = String(rupiahString).replace(/[^0-9]/g, ''); 
+            return parseInt(cleanString) || 0;
+        }
 
+        /**
+         * Memformat angka menjadi Rupiah (Contoh: 10000 menjadi 10.000,-)
+         * @param {number} angka 
+         * @returns {string}
+         */
+        function formatRupiah(angka) {
+            if (isNaN(angka) || angka === null) return '0,-';
+            const num = Math.round(angka); 
+            const sign = num < 0 ? '-' : '';
+            const absNum = Math.abs(num);
+            
+            const formatted = new Intl.NumberFormat('id-ID').format(absNum);
+            
+            return `${sign}${formatted},-`;
+        }
+        
+        /**
+         * Fungsi yang memformat input harga menjadi format Rupiah (10000 -> 10.000) saat diketik.
+         * @param {HTMLInputElement} input 
+         */
+        function formatRupiahInput(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+
+            // Hapus leading zero
+            if (value.length > 1 && value.startsWith('0')) {
+                value = value.replace(/^0+/, '');
+            }
+            
+            // Konversi ke angka, lalu format
+            const number = parseInt(value);
+            if (isNaN(number)) {
+                input.value = '';
+                return;
+            }
+
+            input.value = new Intl.NumberFormat('id-ID').format(number);
+        }
+        
+        /**
+         * Fungsi formatAngka untuk nominal stok (10000 -> 10.000)
+         * @param {number} angka 
+         * @returns {string}
+         */
+        function formatAngka(angka) {
+            if (isNaN(angka) || angka === null) return '0';
+            
+            const num = parseFloat(angka);
+            return new Intl.NumberFormat('id-ID', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 5,
+            }).format(num);
+        }
+        
+        function getWaktuLokal() {
+            const now = new Date();
+            const date = now.toLocaleDateString('id-ID');
+            const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            return `${date}, ${time}`;
+        }
+        
+        /**
+         * Mengambil tanggal dalam format YYYY-MM-DD
+         */
+        function dapatkanTanggalHariIni() {
+            const hariIni = new Date();
+            const year = hariIni.getFullYear();
+            const month = (hariIni.getMonth() + 1).toString().padStart(2, '0');
+            const day = hariIni.getDate().toString().padStart(2, '0');
+            // FIX: memastikan tidak ada spasi di antara "Tanggal" dan "Hari"
+            return `${year}-${month}-${day}`;
+        }
+        
+        /**
+         * Mengambil tanggal transaksi dari string waktu lokal (misal: "21/09/2025, 14.00")
+         * dan mengembalikan dalam format YYYY-MM-DD
+         */
+        function getTanggalDariWaktuLokal(waktuLokalString) {
+            const bagianTanggal = waktuLokalString.split(',')[0].trim();
+            const [day, month, year] = bagianTanggal.split('/');
+            if (year && month && day) {
+                return `${year}-${month}-${day}`;
+            }
+            return ''; 
+        }
+
+        
         // --- Fungsi Custom Alert/Confirm (Pengganti alert() dan confirm()) ---
         let customAlertResolve;
 
@@ -728,69 +958,10 @@
         }
         // --- Akhir Custom Alert/Confirm ---
 
-
-        function formatRupiah(angka) {
-            if (isNaN(angka) || angka === null) return '0';
-            const num = Math.round(angka); 
-            let reverse = num.toString().split('').reverse().join(''),
-                ribuan = reverse.match(/\d{1,3}/g);
-            ribuan = ribuan.join('.').split('').reverse().join('');
-            return ribuan;
-        }
-        
-        function formatAngka(angka) {
-            if (isNaN(angka) || angka === null) return '0';
-            // Presisi 5 angka di belakang koma untuk kuantitas kecil
-            const formatted = parseFloat(angka).toFixed(5);
-            return formatted.replace(/\.?0+$/, ''); 
-        }
-        
-        function getWaktuLokal() {
-            const now = new Date();
-            const date = now.toLocaleDateString('id-ID');
-            const time = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-            return `${date}, ${time}`;
-        }
-        
-        /**
-         * Mengambil tanggal dalam format YYYY-MM-DD
-         */
-        function dapatkanTanggalHariIni() {
-            const hariIni = new Date();
-            const year = hariIni.getFullYear();
-            const month = (hariIni.getMonth() + 1).toString().padStart(2, '0');
-            const day = hariIni.getDate().toString().padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-        
-        /**
-         * Mengambil tanggal transaksi dari string waktu lokal (misal: "21/09/2025, 14.00")
-         * dan mengembalikan dalam format YYYY-MM-DD
-         * @param {string} waktuLokalString - String waktu lokal
-         * @returns {string} Tanggal dalam format YYYY-MM-DD
-         */
-        function getTanggalDariWaktuLokal(waktuLokalString) {
-            // Contoh: "21/09/2025, 14.00" -> ambil "21/09/2025"
-            const bagianTanggal = waktuLokalString.split(',')[0].trim();
-            // Ubah format DD/MM/YYYY menjadi YYYY-MM-DD
-            const [day, month, year] = bagianTanggal.split('/');
-            if (year && month && day) {
-                return `${year}-${month}-${day}`;
-            }
-            return ''; // Kembalikan string kosong jika format tidak sesuai
-        }
-
         
         // --- FUNGSI PENTING UNTUK MENCATAT MODAL PENJUALAN (HPP) ---
-        /**
-         * Mencatat biaya pembelian stok baru sebagai "Modal Penjualan (HPP)".
-         * Data ini akan ditarik oleh halaman finance.html.
-         * @param {string} namaProduk - Nama produk/bahan yang dibeli.
-         * @param {number} totalBiaya - Total biaya modal (pembelian) untuk stok ini.
-         */
         function catatModalPenambahanStok(namaProduk, totalBiaya) {
             if (totalBiaya <= 0 || isNaN(totalBiaya)) {
-                console.error("[HPP Log] Jumlah modal tidak valid. Pencatatan HPP dibatalkan.");
                 return;
             }
 
@@ -807,16 +978,12 @@
             let modalStokBaru = JSON.parse(localStorage.getItem('modalStokBaru')) || [];
             modalStokBaru.push(modalEntry);
             localStorage.setItem('modalStokBaru', JSON.stringify(modalStokBaru));
-
-            console.log(`[HPP Log] Modal pembelian stok ${namaProduk} sebesar Rp ${totalBiaya} berhasil dicatat.`);
             
-            // PENTING: Panggil window.dispatchEvent untuk memberitahu halaman lain (finance.html)
-            // agar mereka memperbarui data jika sedang terbuka.
             window.dispatchEvent(new Event('storage'));
         }
         // --- AKHIR FUNGSI PENTING HPP ---
 
-        // --- Fitur Saran Bahan Mentah dengan Target Kustom ---
+        // --- Fungsi Logika Bisnis (Saran, Hitung Stok, Hitung Modal) ---
         function getSaranBahanMentah(produk) {
             const TARGET_PRODUKSI = produk.targetStokMinimal || 10; 
 
@@ -861,7 +1028,6 @@
                 return `<div class="saran-stok-container saran-cukup"><i class="fas fa-check-circle"></i> Bahan Mentah Cukup untuk min. ${formatAngka(TARGET_PRODUKSI)} unit.</div>`;
             }
         }
-        // --- Akhir Fitur Saran Bahan Mentah ---
 
 
         function hitungStokProdukJadi(produk) {
@@ -920,7 +1086,7 @@
                 statusIcon = 'fa-times-circle';
                 statusText = 'Habis';
             }
-
+            
             return `<span class="status-badge ${statusClass}"><i class="fas ${statusIcon}"></i> ${statusText} (${formatAngka(stok)})</span>`;
         }
         
@@ -940,11 +1106,13 @@
                                 produkStok.bahanMentah.forEach(bahan => {
                                     const bahanStok = daftarStok.find(p => p.nama === bahan.nama);
                                     if (bahanStok) {
+                                        // Mengurangi stok bahan mentah berdasarkan resep dan kuantitas penjualan
                                         bahanStok.stok -= (bahan.kuantitas * itemPenjualan.kuantitas);
                                     }
                                 });
                             } 
                             else if (!produkStok.isBahanMentah) {
+                                // Mengurangi stok produk jadi (untuk barang dagangan)
                                 produkStok.stok -= itemPenjualan.kuantitas;
                             }
                         }
@@ -975,26 +1143,21 @@
             tampilkanTransaksiStok(); 
         }
         
-        /**
-         * Menampilkan transaksi stok dengan fitur filter.
-         */
         function tampilkanTransaksiStok() {
             const tbody = document.getElementById('transaksi-stok-table-body');
             tbody.innerHTML = '';
             
             const filterBahan = document.getElementById('filter-bahan').value.toLowerCase().trim();
-            const filterTanggal = document.getElementById('filter-tanggal').value; // Format YYYY-MM-DD
+            const filterTanggal = document.getElementById('filter-tanggal').value; 
             
             let dataTampil = stokHistori;
             
-            // 1. Filter Bahan
             if (filterBahan) {
                 dataTampil = dataTampil.filter(t => 
                     t.nama.toLowerCase().includes(filterBahan)
                 );
             }
             
-            // 2. Filter Tanggal
             if (filterTanggal) {
                 dataTampil = dataTampil.filter(t => 
                     getTanggalDariWaktuLokal(t.waktu) === filterTanggal
@@ -1006,15 +1169,12 @@
                 return;
             }
             
-            // Tampilkan 100 transaksi terkini setelah difilter, atau semua jika filter digunakan
             const transaksiTerkini = dataTampil.slice(0, filterBahan || filterTanggal ? dataTampil.length : 100); 
 
             transaksiTerkini.forEach(t => {
-                // Cari index asli di stokHistori untuk fungsionalitas hapus
                 const indexAsli = stokHistori.findIndex(item => item === t);
                 
                 const row = document.createElement('tr');
-                // Menggunakan formatRupiah(t.biaya) tanpa format Angka di kolom biaya
                 row.innerHTML = `
                     <td>${t.waktu}</td>
                     <td>${t.nama}</td>
@@ -1028,20 +1188,12 @@
             });
         }
         
-        /**
-         * Mereset input filter transaksi dan memuat ulang tabel.
-         */
         function resetFilterTransaksi() {
             document.getElementById('filter-bahan').value = '';
             document.getElementById('filter-tanggal').value = '';
             tampilkanTransaksiStok();
         }
 
-        /**
-         * Fungsi untuk menghapus transaksi stok bahan mentah dan mengembalikan kondisi stok/modal.
-         * @param {number} index - Index transaksi di array stokHistori.
-         * @param {string} namaBahan - Nama bahan mentah yang terpengaruh.
-         */
         async function handleHapusTransaksiStok(index, namaBahan) {
             const transaksi = stokHistori[index];
             if (!transaksi) return;
@@ -1061,25 +1213,19 @@
                 const jumlahYangDihapus = transaksi.jumlah;
                 const totalBiayaDihapus = transaksi.biaya; 
                 
-                // 1. Hitung ulang stok dan harga modal (Metode Rata-rata Tertimbang)
                 const stokLama = bahanStok.stok;
                 const hargaModalLama = bahanStok.hargaBeli || 0;
                 
                 // Hitung total nilai stok sebelum transaksi yang akan dihapus
-                // Nilai total sebelum transaksi = (Stok Saat Ini * Harga Modal Rata-rata Saat Ini)
                 const totalNilaiSaatIni = stokLama * hargaModalLama;
-                
-                // Nilai total setelah transaksi dihapus
                 const totalNilaiSetelahDihapus = totalNilaiSaatIni - totalBiayaDihapus; 
                 
                 const stokBaru = stokLama - jumlahYangDihapus;
                 
                 let hargaModalBaru;
                 if (stokBaru > 0) {
-                    // Harga modal rata-rata baru
                     hargaModalBaru = totalNilaiSetelahDihapus / stokBaru;
                 } else {
-                    // Jika stok habis setelah penghapusan, harga modal menjadi 0
                     hargaModalBaru = 0;
                 }
                 
@@ -1087,10 +1233,9 @@
                 bahanStok.stok = Math.max(0, stokBaru); 
                 bahanStok.hargaBeli = Math.max(0, hargaModalBaru);
                 
-                // 2. Hapus transaksi dari histori
+                // Hapus transaksi dari histori
                 stokHistori.splice(index, 1);
 
-                // 3. Simpan dan Tampilkan ulang
                 localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
                 localStorage.setItem('stokHistori', JSON.stringify(stokHistori));
                 
@@ -1111,10 +1256,9 @@
             tbodyProdukJadi.innerHTML = '';
             tbodyBahanMentah.innerHTML = '';
             
-            // Tambahkan properti targetStokMinimal jika belum ada (untuk data lama)
             daftarStok = daftarStok.map(p => {
                 if (!p.isBahanMentah && typeof p.targetStokMinimal === 'undefined') {
-                    p.targetStokMinimal = 10; // Default nilai 10
+                    p.targetStokMinimal = 10;
                 }
                 return p;
             });
@@ -1122,7 +1266,6 @@
             const produkJadi = daftarStok.filter(p => !p.isBahanMentah);
             const bahanMentah = daftarStok.filter(p => p.isBahanMentah);
 
-            // Tampilkan Produk Jadi
             if (produkJadi.length === 0) {
                 tbodyProdukJadi.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada data produk jadi.</td></tr>';
             } else {
@@ -1153,7 +1296,6 @@
                 });
             }
 
-            // Tampilkan Bahan Mentah
             if (bahanMentah.length === 0) {
                 tbodyBahanMentah.innerHTML = '<tr><td colspan="4" style="text-align: center;">Tidak ada data bahan mentah.</td></tr>';
             } else {
@@ -1203,7 +1345,6 @@
             isNewBahanMode = !isNewBahanMode;
             
             if (isNewBahanMode) {
-                // Mode Input Teks (Bahan Baru)
                 select.style.display = 'none';
                 select.removeAttribute('required');
                 select.value = ""; 
@@ -1212,10 +1353,9 @@
                 inputBaru.setAttribute('required', 'required');
                 inputBaru.focus();
                 
-                btnToggle.textContent = '<< Pilih Bahan';
+                btnToggle.innerHTML = '<i class="fas fa-arrow-left"></i> Pilih Bahan';
                 infoText.innerHTML = 'Anda akan menambahkan bahan mentah baru. Pastikan namanya unik.';
             } else {
-                // Mode Select (Pilih dari Daftar)
                 inputBaru.style.display = 'none';
                 inputBaru.removeAttribute('required');
                 inputBaru.value = "";
@@ -1223,14 +1363,14 @@
                 select.style.display = 'block';
                 select.setAttribute('required', 'required');
                 
-                btnToggle.textContent = '+ Bahan Baru';
+                btnToggle.innerHTML = '<i class="fas fa-plus"></i> Bahan Baru';
                 infoText.innerHTML = 'Pilih dari daftar bahan yang sudah ada.';
             }
         }
         // --- Akhir Perbaikan Input Toggle ---
 
 
-        // --- Modal Tambah Produk Jadi ---
+        // --- Modals Tambah/Edit Produk/Stok ---
         function tampilkanModalTambahProdukJadi() {
             document.getElementById('form-tambah-produk-jadi').reset();
             document.getElementById('bahan-mentah-list').innerHTML = '';
@@ -1256,7 +1396,7 @@
             placeholderOption.textContent = "Pilih Bahan Mentah";
             select.appendChild(placeholderOption);
 
-            const bahanMentahTersedia = daftarStok.filter(p => p.isBahanMentah);
+            const bahanMentahTersedia = daftarStok.filter(p => p.isBahanMentah).sort((a, b) => a.nama.localeCompare(b.nama));
             bahanMentahTersedia.forEach(bahan => {
                 const option = document.createElement('option');
                 option.value = bahan.nama;
@@ -1264,10 +1404,10 @@
                 select.appendChild(option);
             });
             
-            const kuantitasTersimpan = kuantitas ? formatAngka(kuantitas) : '';
+            const kuantitasTersimpan = kuantitas ? kuantitas : '';
             
             newDiv.innerHTML = `
-                <input type="number" placeholder="Kuantitas (Contoh: 0.005)" class="kuantitas-bahan-mentah" min="0.00001" step="any" required value="${kuantitasTersimpan}">
+                <input type="number" placeholder="Kuantitas (Contoh: 0.005)" class="kuantitas-bahan-mentah kuantitas-input" min="0.00001" step="any" required value="${kuantitasTersimpan}">
                 <button type="button" class="btn btn-delete" style="padding: 8px 10px;" onclick="this.parentNode.remove()"><i class="fas fa-trash"></i></button>
             `;
             newDiv.prepend(select);
@@ -1298,7 +1438,6 @@
                 const namaBahan = item.querySelector('.select-bahan-mentah').value;
                 const kuantitasBahan = parseFloat(item.querySelector('.kuantitas-bahan-mentah').value);
                 if (namaBahan && kuantitasBahan > 0) {
-                    // Simpan sebagai float murni
                     bahanMentah.push({ nama: namaBahan, kuantitas: kuantitasBahan });
                 }
             });
@@ -1313,14 +1452,21 @@
             };
             
             if (bahanMentah.length === 0) {
-                 const jumlahStokStr = prompt(`Produk '${namaProduk}' adalah barang dagangan/non-produksi. Masukkan Stok Awal (Contoh: 10):`, 0);
-                 if (jumlahStokStr === null || isNaN(parseFloat(jumlahStokStr)) || parseFloat(jumlahStokStr) < 0) {
+                 const konfirmasiStok = await customConfirm(
+                    `Produk '${namaProduk}' adalah **barang dagangan/non-produksi** (tanpa resep). Lanjutkan untuk memasukkan Stok Awal dan Harga Modal?`, 
+                    "Konfirmasi Barang Dagangan"
+                 );
+                 if (!konfirmasiStok) return;
+
+                 const stokStr = prompt(`Masukkan Stok Awal untuk '${namaProduk}':`, 0);
+                 if (stokStr === null || isNaN(parseFloat(stokStr)) || parseFloat(stokStr) < 0) {
                      await customAlert("Penambahan produk dibatalkan. Stok awal tidak valid.");
                      return;
                  }
-                 newProduct.stok = parseFloat(jumlahStokStr);
+                 newProduct.stok = parseFloat(stokStr);
                  
-                 const hargaBeliStr = prompt(`Masukkan Harga Modal/Beli per Unit untuk '${namaProduk}' (Contoh: 5000):`, 0);
+                 const hargaBeliStr = prompt(`Masukkan Harga Modal/Beli per Unit untuk '${namaProduk}':`, 0);
+                 
                  if (hargaBeliStr === null || isNaN(parseFloat(hargaBeliStr)) || parseFloat(hargaBeliStr) < 0) {
                      await customAlert("Penambahan produk dibatalkan. Harga modal tidak valid.");
                      return;
@@ -1336,17 +1482,20 @@
             await customAlert(`Produk jadi baru '${namaProduk}' berhasil ditambahkan. Target Stok Minimal: ${targetStokMinimal} unit.`, "Berhasil!");
         });
 
-        // --- Modal Tambah/Stok Bahan Mentah ---
+
         function tampilkanModalTambahStokBahan() {
             document.getElementById('form-tambah-stok-bahan').reset();
-            // Reset ke mode Select
             isNewBahanMode = false;
             document.getElementById('stok-bahan-select').style.display = 'block';
             document.getElementById('stok-bahan-select').setAttribute('required', 'required');
             document.getElementById('stok-bahan-nama-baru').style.display = 'none';
             document.getElementById('stok-bahan-nama-baru').removeAttribute('required');
-            document.getElementById('btn-toggle-input').textContent = '+ Bahan Baru';
+            document.getElementById('btn-toggle-input').innerHTML = '<i class="fas fa-plus"></i> Bahan Baru';
             document.getElementById('info-bahan-mentah').innerHTML = 'Pilih dari daftar bahan yang sudah ada.';
+            
+            // PERBAIKAN: Reset input harga tanpa format ,-
+            document.getElementById('stok-bahan-harga-per-unit').value = '';
+            document.getElementById('stok-bahan-harga-per-paket').value = '';
             
             updateStokBahanMentahSelect();
             document.getElementById('modalTambahStokBahan').style.display = 'flex';
@@ -1367,18 +1516,30 @@
             }
             
             const jumlahDitambah = parseFloat(document.getElementById('stok-bahan-jumlah').value);
-            const hargaPerUnitInput = parseFloat(document.getElementById('stok-bahan-harga-per-unit').value) || 0;
-            const hargaPerPaketInput = parseFloat(document.getElementById('stok-bahan-harga-per-paket').value) || 0;
+            
+            // PERBAIKAN: Mengambil nilai tanpa format Rupiah (hanya angka)
+            // Menggunakan parseRupiah untuk membersihkan input yang sudah diformat (10.000 -> 10000)
+            const hargaPerUnitInput = parseRupiah(document.getElementById('stok-bahan-harga-per-unit').value);
+            const hargaPerPaketInput = parseRupiah(document.getElementById('stok-bahan-harga-per-paket').value);
             
             if (namaProduk === "" || jumlahDitambah <= 0 || (hargaPerUnitInput <= 0 && hargaPerPaketInput <= 0)) {
-                await customAlert("Silakan lengkapi Nama Bahan, Jumlah, dan setidaknya salah satu Harga Beli.");
+                await customAlert("Silakan lengkapi Nama Bahan, Jumlah, dan setidaknya salah satu Harga Beli (dalam angka).");
                 return;
             }
             
-            let hargaBeliUnitBaru = hargaPerUnitInput > 0 ? hargaPerUnitInput : (hargaPerPaketInput / jumlahDitambah);
-            
-            // Perbaikan: Hitung Total Biaya Pembelian dengan benar
-            let totalBiayaPembelian = hargaPerUnitInput > 0 ? (jumlahDitambah * hargaPerUnitInput) : hargaPerPaketInput;
+            let hargaBeliUnitBaru;
+            let totalBiayaPembelian;
+
+            if (hargaPerUnitInput > 0 && hargaPerUnitInput * jumlahDitambah > 0) {
+                 hargaBeliUnitBaru = hargaPerUnitInput;
+                 totalBiayaPembelian = hargaPerUnitInput * jumlahDitambah;
+            } else if (hargaPerPaketInput > 0) {
+                 hargaBeliUnitBaru = hargaPerPaketInput / jumlahDitambah;
+                 totalBiayaPembelian = hargaPerPaketInput;
+            } else {
+                await customAlert("Perhitungan harga beli tidak valid. Pastikan jumlah dan harga beli total/per unit sudah benar.");
+                return;
+            }
 
 
             let produk = daftarStok.find(p => p.nama.toLowerCase() === namaProduk.toLowerCase());
@@ -1408,18 +1569,13 @@
             }
             
             const totalNilaiLama = produk.stok * (produk.hargaBeli || 0);
-            const totalNilaiBaru = jumlahDitambah * hargaBeliUnitBaru;
             const stokTotalBaru = produk.stok + jumlahDitambah;
             
             produk.stok = stokTotalBaru;
-            produk.hargaBeli = stokTotalBaru > 0 ? (totalNilaiLama + totalNilaiBaru) / stokTotalBaru : 0;
+            produk.hargaBeli = stokTotalBaru > 0 ? (totalNilaiLama + totalBiayaPembelian) / stokTotalBaru : 0;
             
             if (totalBiayaPembelian > 0) {
-                 // 🌟🌟 BARIS KRUSIAL: MENCATAT MODAL PENJUALAN (HPP) 🌟🌟
                  catatModalPenambahanStok(namaProduk, totalBiayaPembelian); 
-                 // 🌟🌟 AKHIR BARIS KRUSIAL 🌟🌟
-                 
-                 // Catat ke histori stok lokal
                  catatTransaksiStok(namaProduk, jumlahDitambah, totalBiayaPembelian, produk.hargaBeli, produk.stok);
             }
 
@@ -1448,7 +1604,6 @@
             const editModalCostInfo = document.getElementById('edit-modal-cost-info');
             const editTargetStokGroup = document.getElementById('edit-target-stok-group');
 
-            // Reset required attribute
             editStokInput.removeAttribute('required');
             editHargaBeliInput.removeAttribute('required');
             
@@ -1458,9 +1613,9 @@
             editStokGroup.style.display = 'block';
 
             if (produk.isBahanMentah) {
-                // Bahan Mentah
                 editStokInput.value = formatAngka(produk.stok); 
-                editHargaBeliInput.value = formatAngka(produk.hargaBeli); 
+                // PERBAIKAN: Tampilkan harga modal Rata-rata dalam format Rupiah (10.000) untuk diedit
+                editHargaBeliInput.value = new Intl.NumberFormat('id-ID').format(Math.round(produk.hargaBeli || 0)); 
                 infoStokEdit.textContent = 'Ini adalah stok fisik. Ubah nilai ini untuk koreksi data.';
                 editHargaBeliGroup.style.display = 'block';
                 editStokInput.setAttribute('required', 'required'); 
@@ -1471,7 +1626,6 @@
                 editModalCostInfo.innerHTML = `Harga Modal Rata-rata saat ini: **Rp ${formatRupiah(produk.hargaBeli)}**`;
                 
             } else {
-                // Produk Jadi
                 const hargaModalOtomatis = hitungHargaModalProdukJadi(produk);
                 document.getElementById('edit-target-stok-minimal').value = produk.targetStokMinimal || 10;
                 editTargetStokGroup.style.display = 'block';
@@ -1480,7 +1634,6 @@
                 editModalCostInfo.innerHTML = `Harga Modal Otomatis (Resep): **Rp ${formatRupiah(hargaModalOtomatis)}**`;
                 
                 if (produk.bahanMentah && produk.bahanMentah.length > 0) {
-                     // Produk jadi dengan resep (produksi)
                     editStokGroup.style.display = 'none'; 
                     editHargaBeliGroup.style.display = 'none'; 
                     
@@ -1491,10 +1644,10 @@
                         tambahInputBahanMentah('edit', bahan.nama, bahan.kuantitas); 
                     });
                 } else {
-                    // Produk jadi tanpa resep (barang dagangan)
                     editStokGroup.style.display = 'block';
                     editStokInput.value = formatAngka(produk.stok); 
-                    editHargaBeliInput.value = formatAngka(produk.hargaBeli); 
+                    // PERBAIKAN: Tampilkan harga modal Rata-rata dalam format Rupiah (10.000) untuk diedit
+                    editHargaBeliInput.value = new Intl.NumberFormat('id-ID').format(Math.round(produk.hargaBeli || 0)); 
                     editHargaBeliGroup.style.display = 'block';
                     editStokInput.setAttribute('required', 'required'); 
                     editHargaBeliInput.setAttribute('required', 'required'); 
@@ -1521,8 +1674,13 @@
             const stokInput = document.getElementById('edit-produk-stok');
             const hargaBeliInput = document.getElementById('edit-produk-harga-beli');
             
-            const stokBaru = stokInput.parentNode.style.display !== 'none' ? parseFloat(stokInput.value) : undefined;
-            const hargaBeliBaru = hargaBeliInput.parentNode.style.display !== 'none' ? parseFloat(hargaBeliInput.value) : undefined;
+            // Mengambil nilai murni dengan membersihkan format Rupiah dari input
+            const stokBaru = stokInput.parentNode.style.display !== 'none' ? parseFloat(stokInput.value.replace(/[^0-9.]/g, '')) : undefined; 
+            const hargaBeliBaruRupiah = hargaBeliInput.parentNode.style.display !== 'none' ? parseRupiah(hargaBeliInput.value) : undefined; 
+
+            // Validasi nilai
+            if (stokBaru !== undefined && isNaN(stokBaru)) { await customAlert("Nilai Stok tidak valid."); return; }
+            if (hargaBeliBaruRupiah !== undefined && isNaN(hargaBeliBaruRupiah)) { await customAlert("Nilai Harga Modal tidak valid."); return; }
 
 
             const produkIndex = daftarStok.findIndex(p => p.nama === namaLama);
@@ -1530,10 +1688,10 @@
                 daftarStok[produkIndex].nama = namaBaru;
                 daftarStok[produkIndex].targetStokMinimal = targetStokMinimalBaru; 
 
-                // Hanya update stok dan harga jika itu adalah Bahan Mentah atau Produk Dagangan
                 if (tipeProduk === 'bahan' || (tipeProduk === 'jadi' && daftarStok[produkIndex].bahanMentah.length === 0)) {
                     if (stokBaru !== undefined) daftarStok[produkIndex].stok = stokBaru;
-                    if (hargaBeliBaru !== undefined) daftarStok[produkIndex].hargaBeli = hargaBeliBaru;
+                    // Menggunakan hargaBeliBaruRupiah yang sudah dibersihkan
+                    if (hargaBeliBaruRupiah !== undefined) daftarStok[produkIndex].hargaBeli = hargaBeliBaruRupiah;
                 }
                 
                 if (tipeProduk === 'jadi') {
@@ -1545,7 +1703,6 @@
                         const namaBahan = select.value;
                         const kuantitasBahan = parseFloat(input.value);
                         if (namaBahan && kuantitasBahan > 0) {
-                            // Simpan sebagai float murni
                             bahanMentahBaru.push({ nama: namaBahan, kuantitas: kuantitasBahan });
                         }
                     });
@@ -1579,14 +1736,8 @@
         }
         
         // ===========================================
-        // FUNGIONALITAS IMPOR/EKSPOR DATA 
+        // FUNGIONALITAS IMPOR/EKSPOR DATA & RESET
         // ===========================================
-
-        // [FUNGSI IMPOR/EKSPOR LAINNYA TETAP SAMA]...
-
-        /**
-         * 1. IMPOR TRANSAKSI KULAKAN (CSV dari Karyawan)
-         */
 
         async function handleImportTransaksi(event) {
             const file = event.target.files[0];
@@ -1598,7 +1749,7 @@
             );
 
             if (!konfirmasi) {
-                document.getElementById('file-input-transaksi').value = ''; // Reset input file
+                document.getElementById('file-input-transaksi').value = '';
                 return;
             }
 
@@ -1609,7 +1760,6 @@
                     let importedCount = 0;
                     const errors = [];
                     
-                    // Kolom yang diharapkan
                     const expectedHeaders = ['Nama Bahan', 'Jumlah Tambah', 'Total Biaya Beli'];
                     const hasHeaders = expectedHeaders.every(h => results.meta.fields.includes(h));
 
@@ -1620,24 +1770,21 @@
 
                     for (const row of results.data) {
                         const nama = row['Nama Bahan'] ? row['Nama Bahan'].trim() : null;
-                        
-                        // Membersihkan input angka (mengganti koma dengan titik dan menghapus karakter non-angka/titik)
                         const jumlahStr = row['Jumlah Tambah'] ? row['Jumlah Tambah'].replace(/,/g, '.') : '0';
                         const biayaStr = row['Total Biaya Beli'] ? row['Total Biaya Beli'].replace(/,/g, '.') : '0';
                         
                         const jumlah = parseFloat(jumlahStr);
-                        const biaya = parseFloat(biayaStr);
+                        // Menggunakan parseFloat agar bisa membaca angka desimal dari CSV
+                        const biaya = parseFloat(biayaStr.replace(/[^0-9.]/g, '')) || 0; 
                         
                         if (!nama || isNaN(jumlah) || jumlah <= 0 || isNaN(biaya) || biaya < 0) {
                             errors.push(`Baris Gagal: Nama: ${nama}, Jumlah: ${jumlahStr}, Biaya: ${biayaStr} (Data tidak valid)`);
                             continue;
                         }
 
-                        // Cek atau buat bahan mentah
                         let produk = daftarStok.find(p => p.nama.toLowerCase() === nama.toLowerCase());
 
                         if (!produk) {
-                            // Tambahkan otomatis jika belum ada, karena ini data kulakan
                             produk = {
                                 nama: nama,
                                 stok: 0,
@@ -1651,18 +1798,15 @@
                              continue;
                         }
                         
-                        // === Logika Perhitungan Rata-rata Tertimbang ===
                         const totalNilaiLama = produk.stok * (produk.hargaBeli || 0);
                         const stokTotalBaru = produk.stok + jumlah;
                         
-                        // Perhitungan harga modal rata-rata yang baru
                         produk.stok = stokTotalBaru;
                         produk.hargaBeli = stokTotalBaru > 0 ? (totalNilaiLama + biaya) / stokTotalBaru : 0;
                         
-                        // Catat HPP dan Histori Stok
                         if (biaya > 0) {
-                             catatModalPenambahanStok(nama, biaya); // Mencatat HPP
-                             catatTransaksiStok(nama, jumlah, biaya, produk.hargaBeli, produk.stok); // Mencatat histori lokal
+                             catatModalPenambahanStok(nama, biaya);
+                             catatTransaksiStok(nama, jumlah, biaya, produk.hargaBeli, produk.stok);
                         }
                         importedCount++;
                     }
@@ -1681,13 +1825,10 @@
                     customAlert(`Gagal membaca file: ${error.message}`, "Error!");
                 }
             });
-            document.getElementById('file-input-transaksi').value = ''; // Reset input
+            document.getElementById('file-input-transaksi').value = '';
         }
 
 
-        /**
-         * 2. EKSPOR DATA UNTUK KARYAWAN (BARU - Tanpa Harga Modal)
-         */
         function exportDataUntukKaryawan() {
             if (daftarStok.length === 0) {
                 customAlert("Tidak ada data stok untuk diekspor.");
@@ -1701,7 +1842,6 @@
                 let stokSaatIni = formatAngka(produk.stok); 
 
                 if (!produk.isBahanMentah) {
-                    // --- Proses Produk Jadi ---
                     const stokOtomatis = hitungStokProdukJadi(produk);
                     stokSaatIni = formatAngka(stokOtomatis);
                     const TARGET_PRODUKSI = produk.targetStokMinimal || 10; 
@@ -1715,7 +1855,6 @@
                             const stokTersedia = bahanStok ? bahanStok.stok : 0;
                             const jumlahDibutuhkan = bahan.kuantitas;
                             
-                            // Hitung unit yang bisa dibuat dari bahan ini
                             const unitBisaDibuat = (jumlahDibutuhkan > 0) ? Math.floor(stokTersedia / jumlahDibutuhkan) : Infinity;
                             
                             if (unitBisaDibuat < TARGET_PRODUKSI) {
@@ -1733,7 +1872,6 @@
                             saran = `Cukup untuk ${TARGET_PRODUKSI} unit.`;
                         }
                     } else {
-                        // Produk Jadi (Barang Dagangan Manual)
                         const limitRendah = produk.targetStokMinimal || 10;
                         if (produk.stok < limitRendah) {
                              saran = `Stok Rendah. Tambah Hingga ${limitRendah} unit.`;
@@ -1743,7 +1881,6 @@
                     }
 
                 } else {
-                    // --- Proses Bahan Mentah ---
                     const limitRendah = 20; 
                     if (produk.stok < limitRendah) {
                         saran = `Stok Rendah. Segera Kulakan!`;
@@ -1779,16 +1916,12 @@
         }
 
 
-        /**
-         * 3. IMPOR & EKSPOR DATA STOK PENUH (Admin)
-         */
         function exportFullData() {
             if (daftarStok.length === 0) {
                 customAlert("Tidak ada data stok untuk diekspor.");
                 return;
             }
             
-            // Ekspor seluruh array daftarStok dalam format JSON
             const dataString = JSON.stringify(daftarStok, null, 2);
             
             const blob = new Blob([dataString], { type: 'application/json' });
@@ -1824,7 +1957,6 @@
                         daftarStok = importedData;
                         localStorage.setItem('daftarStok', JSON.stringify(daftarStok));
                         
-                        // Hapus histori transaksi stok dan HPP karena data penuh biasanya mencakup kondisi stok akhir
                         localStorage.removeItem('stokHistori'); 
                         
                         tampilkanDaftarStok();
@@ -1837,12 +1969,8 @@
                 }
             };
             reader.readAsText(file);
-            document.getElementById('file-input-full').value = ''; // Reset input
+            document.getElementById('file-input-full').value = '';
         }
-        
-        // ===========================================
-        // FUNGSI BARU: RESET DATA
-        // ===========================================
         
         async function resetSemuaData() {
             const konfirmasi = await customConfirm(
@@ -1851,18 +1979,13 @@
             );
 
             if (konfirmasi) {
-                // Hapus data lokal
                 localStorage.removeItem('daftarStok');
                 localStorage.removeItem('stokHistori');
-                
-                // Hapus data yang terhubung ke finance.html
                 localStorage.removeItem('modalStokBaru'); 
                 
-                // Reset variabel global
                 daftarStok = [];
                 stokHistori = [];
                 
-                // Muat ulang tampilan
                 tampilkanDaftarStok();
                 tampilkanTransaksiStok();
                 
