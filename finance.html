@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Keuangan | Aplikasi Bisnis</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script> 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
@@ -21,7 +22,7 @@
 
             --income-color: #28a745;
             --expense-color: #dc3545;
-            --modal-color: #ffc107; 
+            /* DIHAPUS: Warna untuk Modal Stok (kuning) */
             --profit-color: #007BFF;
             --gross-profit-color: #00A65A; 
 
@@ -107,7 +108,8 @@
 
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            /* DIUBAH: Menggunakan 4 kolom setelah menghapus Modal Stok */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
             gap: 20px; 
             margin-bottom: 40px;
         }
@@ -140,17 +142,35 @@
         }
         
         .income { border-left-color: var(--income-color); }
-        .hpp { border-left-color: var(--modal-color); }
+        /* DIHAPUS: Gaya untuk Modal/Stok */
         .profit { border-left-color: var(--profit-color); }
         .expense { border-left-color: var(--expense-color); }
         .gross-profit { border-left-color: var(--gross-profit-color); }
 
         .income .value { color: var(--income-color); }
-        .hpp .value { color: var(--modal-color); }
+        /* DIHAPUS: Gaya untuk Modal/Stok */
         .profit .value { color: var(--profit-color); }
         .expense .value { color: var(--expense-color); }
         .gross-profit .value { color: var(--gross-profit-color); }
+        
+        /* Gaya untuk Grafik */
+        .chart-container {
+            background-color: var(--card-background);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            margin-bottom: 40px;
+        }
 
+        .chart-container h2 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 5px;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
         .data-table-container {
             background-color: var(--card-background);
             padding: 30px;
@@ -423,10 +443,6 @@
                 <div class="label">Penjualan</div>
                 <div class="value" id="total-omset">Rp 0</div>
             </div>
-            <div class="summary-card hpp">
-                <div class="label">Modal Stok</div>
-                <div class="value" id="total-modal-penjualan">Rp 0</div>
-            </div>
             <div class="summary-card gross-profit">
                 <div class="label">Pendapatan Kotor</div>
                 <div class="value" id="total-pendapatan-kotor">Rp 0</div>
@@ -438,6 +454,13 @@
             <div class="summary-card profit">
                 <div class="label">Keuntungan Bersih</div>
                 <div class="value" id="total-profit">Rp 0</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Analisis Keuntungan Bulanan</h2>
+            <div style="width: 100%; height: 400px;">
+                <canvas id="keuntunganChart"></canvas>
             </div>
         </div>
         
@@ -468,7 +491,6 @@
                     <select id="filter-kategori" onchange="filterTransaksi()">
                         <option value="">Semua Tipe</option>
                         <option value="Pendapatan">Penjualan</option>
-                        <option value="Modal Penjualan">Modal Stok</option>
                         <option value="Pengeluaran">Pengeluaran Lainnya</option>
                     </select>
                 </div>
@@ -511,9 +533,8 @@
                 <div class="form-group">
                     <label for="kategori-pengeluaran">Tipe Pengeluaran:</label>
                     <select id="kategori-pengeluaran" required>
-                        <option value="Pengeluaran Lainnya">Pengeluaran Lainnya (Non-Modal)</option>
-                        <option value="Modal Penjualan">Modal Stok</option>
-                    </select>
+                        <option value="Pengeluaran Lainnya">Pengeluaran Lainnya</option>
+                        </select>
                 </div>
                 <div class="form-group">
                     <label for="jumlah-pengeluaran">Jumlah (Rp):</label>
@@ -544,9 +565,8 @@
                     <label for="edit-tipe">Tipe Transaksi:</label>
                     <select id="edit-tipe" required>
                         <option value="Pengeluaran">Pengeluaran Lainnya</option>
-                        <option value="Modal Penjualan">Modal Stok</option>
-                    </select>
-                    <small id="edit-tipe-info" style="color:red;">Hanya Transaksi Manual/Stok yang bisa di Edit.</small>
+                        </select>
+                    <small id="edit-tipe-info" style="color:red;">Hanya Transaksi Manual yang bisa di Edit.</small>
                 </div>
                 <div class="form-group">
                     <label for="edit-jumlah">Jumlah (Rp):</label>
@@ -564,7 +584,7 @@
             </h3>
             
             <p style="color: var(--text-color); line-height: 1.5; margin-bottom: 25px;">
-                **PERINGATAN KERAS:** Tindakan ini akan **menghapus SELURUH** data keuangan (Laporan, Penjualan, Modal Stok, Pengeluaran Manual) yang tersimpan di halaman ini.
+                **PERINGATAN KERAS:** Tindakan ini akan **menghapus SELURUH** data keuangan (Laporan, Penjualan, Pengeluaran Manual) yang tersimpan di halaman ini.
             </p>
             
             <p style="color: var(--light-text); font-size: 0.9em;">
@@ -585,6 +605,8 @@
     <div id="customNotification" role="alert"></div>
 
     <script>
+        let myChart = null; // Variabel global untuk menyimpan instance Chart.js
+
         document.addEventListener('DOMContentLoaded', () => {
             // Panggil sinkronisasi sebelum memuat data untuk memastikan Penjualan terbaru tersedia
             sinkronisasiDataKeuangan();
@@ -596,6 +618,9 @@
             tampilkanRingkasanKeuangan(); // Panggilan awal untuk memuat data default
             tampilkanTabelKeuangan(); 
             
+            // Panggil fungsi render chart
+            renderKeuntunganChart();
+            
             // Event listener untuk Filter Riwayat Transaksi (Tabel di Bawah)
             document.getElementById('filter-limit').addEventListener('change', filterTransaksi); 
             document.getElementById('filter-nama').addEventListener('input', filterTransaksi);
@@ -605,11 +630,12 @@
             
             // Event listener untuk memastikan data di-refresh ketika ada perubahan di halaman lain (misalnya Stok atau Penjualan)
             window.addEventListener('storage', (event) => {
-                if (event.key === 'dataKeuangan' || event.key === 'transaksiHistori' || event.key === 'modalStokBaru') {
+                if (event.key === 'dataKeuangan' || event.key === 'transaksiHistori' || event.key === 'modalStokBaru' || event.key === 'totalNilaiStokSaatIni') {
                     // Hanya panggil ulang sinkronisasi dan tampilan jika data sumber berubah
                     sinkronisasiDataKeuangan(); 
                     tampilkanRingkasanKeuangan();
                     tampilkanTabelKeuangan();
+                    renderKeuntunganChart(); // Render ulang chart
                 }
             });
         });
@@ -757,14 +783,13 @@
 
 
         /**
-         * FUNGSI PENTING: MENSINKRONISASI DATA PENJUALAN, MODAL STOK, dan LABA KOTOR
+         * FUNGSI PENTING: MENSINKRONISASI DATA PENJUALAN, LABA KOTOR (MODIFIKASI: MENGHAPUS SINKRONISASI MODAL STOK)
          * dari sumber-sumber lain ke dalam dataKeuangan
-         * ASUMSI: Setiap objek transaksi di 'transaksiHistori' memiliki properti 'labaKotor'.
          */
         function sinkronisasiDataKeuangan() {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
             let transaksiHistori = JSON.parse(localStorage.getItem('transaksiHistori')) || [];
-            let modalStokBaru = JSON.parse(localStorage.getItem('modalStokBaru')) || []; 
+            // DIHAPUS: let modalStokBaru = JSON.parse(localStorage.getItem('modalStokBaru')) || []; 
             let isChanged = false;
 
             const omsetHarian = {};
@@ -814,7 +839,8 @@
             });
 
             // Hapus SEMUA entri 'Pendapatan' dan 'Laba Kotor' yang merupakan hasil Aggregasi LAMA.
-            dataKeuangan = dataKeuangan.filter(t => (t.tipe !== 'Pendapatan' && t.tipe !== 'Laba Kotor') || !t.isAggregated);
+            // PENTING: Juga hapus entri 'Modal Penjualan' lama (baik yang dari Stok maupun manual)
+            dataKeuangan = dataKeuangan.filter(t => (t.tipe !== 'Pendapatan' && t.tipe !== 'Laba Kotor' && t.tipe !== 'Modal Penjualan') || !t.isAggregated);
             
             // Tambahkan Aggregasi Pendapatan BARU
             for (const key in omsetHarian) {
@@ -832,40 +858,176 @@
                  isChanged = true;
             }
 
-            // 2. Sinkronisasi Modal Stok (HPP/Stok)
+            // DIHAPUS: 2. Sinkronisasi Modal Stok (Total Modal)
             
-            // Hapus SEMUA entri stok lama dari dataKeuangan SEBELUM ditambahkan ulang.
-            dataKeuangan = dataKeuangan.filter(t => !t.isStok);
-
-            modalStokBaru.forEach(modal => {
-                const idRef = modal.idRef;
-                const hargaBeli = parseFloat(modal.hargaBeli || 0) || 0; 
-                const kuantitas = parseFloat(modal.kuantitas || 0) || 0; 
-                const jumlahHPP = hargaBeli * kuantitas;
-
-                const modalTransaksi = {
-                    tanggal: modal.tanggal,
-                    deskripsi: `Modal Pembelian Stok: ${modal.nama} (Qty: ${kuantitas})`,
-                    tipe: 'Modal Penjualan', 
-                    jumlah: jumlahHPP, 
-                    idRef: idRef,
-                    isStok: true 
-                };
-                
-                if (jumlahHPP > 0) {
-                     dataKeuangan.push(modalTransaksi);
-                     isChanged = true;
-                }
-            });
-            
-            // 3. Simpan kembali data yang sudah disinkronisasi
-            if (isChanged || modalStokBaru.length > 0) {
+            // DIHAPUS: 3. Simpan kembali data yang sudah disinkronisasi
+            if (isChanged) {
                 localStorage.setItem('dataKeuangan', JSON.stringify(dataKeuangan));
             }
         }
 
         // ===========================================
-        // FUNGSI TAMPILAN DAN FILTER
+        // FUNGSI GRAFIK (CHART) BARU
+        // ===========================================
+        
+        /**
+         * Mengumpulkan dan mengagregasi data Keuntungan Kotor dan Bersih bulanan.
+         */
+        function generateChartData() {
+            const dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
+            
+            // Agregasi: { 'YYYY-MM': { labaKotor: 0, pengeluaranLain: 0 } }
+            const bulananData = {}; 
+            
+            dataKeuangan.forEach(transaksi => {
+                const tanggal = transaksi.tanggal; // Format: YYYY-MM-DD
+                if (!tanggal) return;
+
+                const yearMonth = tanggal.substring(0, 7); // YYYY-MM
+                const jumlah = parseFloat(transaksi.jumlah) || 0;
+
+                if (!bulananData[yearMonth]) {
+                    bulananData[yearMonth] = { labaKotorAgg: 0, pengeluaranLain: 0 };
+                }
+
+                if (transaksi.tipe === 'Laba Kotor') {
+                    bulananData[yearMonth].labaKotorAgg += jumlah;
+                } else if (transaksi.tipe === 'Pengeluaran') {
+                    bulananData[yearMonth].pengeluaranLain += jumlah;
+                }
+            });
+
+            // Urutkan Bulan
+            const sortedMonths = Object.keys(bulananData).sort();
+            
+            // Format untuk Chart.js
+            const labels = [];
+            const grossProfits = [];
+            const netProfits = [];
+            
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+            sortedMonths.forEach(ym => {
+                const [year, month] = ym.split('-');
+                const monthIndex = parseInt(month, 10) - 1;
+
+                const labaKotor = bulananData[ym].labaKotorAgg;
+                const pengeluaran = bulananData[ym].pengeluaranLain;
+                const keuntunganBersih = labaKotor - pengeluaran;
+
+                labels.push(`${monthNames[monthIndex]} ${year}`);
+                grossProfits.push(labaKotor);
+                netProfits.push(keuntunganBersih);
+            });
+
+            return { labels, grossProfits, netProfits };
+        }
+        
+        /**
+         * Merender/memperbarui grafik keuntungan bulanan menggunakan Chart.js.
+         */
+        function renderKeuntunganChart() {
+            const chartData = generateChartData();
+            const ctx = document.getElementById('keuntunganChart').getContext('2d');
+            
+            // Hancurkan chart lama jika ada
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            // --- PERUBAHAN UTAMA DI SINI: type: 'line' ---
+            myChart = new Chart(ctx, {
+                type: 'line', // Ganti dari 'bar' ke 'line'
+                data: {
+                    labels: chartData.labels,
+                    datasets: [
+                        {
+                            label: 'Pendapatan Kotor',
+                            data: chartData.grossProfits,
+                            // Gaya untuk garis
+                            borderColor: 'var(--gross-profit-color)', 
+                            backgroundColor: 'rgba(0, 166, 90, 0.2)', // Warna area di bawah garis (transparan)
+                            borderWidth: 3,
+                            fill: true, // PENTING: Untuk mengisi area di bawah garis (membuat kesan "gunung")
+                            tension: 0.4, // Untuk membuat garis melengkung (kurva halus)
+                            pointRadius: 5,
+                            pointBackgroundColor: 'var(--gross-profit-color)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Keuntungan Bersih',
+                            data: chartData.netProfits,
+                            // Gaya untuk garis
+                            borderColor: 'var(--profit-color)',
+                            backgroundColor: 'rgba(0, 123, 255, 0.2)', // Warna area di bawah garis (transparan)
+                            borderWidth: 3,
+                            fill: true, // PENTING: Untuk mengisi area di bawah garis (membuat kesan "gunung")
+                            tension: 0.4, // Untuk membuat garis melengkung (kurva halus)
+                            pointRadius: 5,
+                            pointBackgroundColor: 'var(--profit-color)',
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index', // Memungkinkan tooltip menampilkan data dari kedua garis
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    // Format sumbu Y sebagai Rupiah
+                                    if (value >= 0) {
+                                        return 'Rp ' + formatRupiah(value);
+                                    } else {
+                                        return '(Rp ' + formatRupiah(Math.abs(value)) + ')';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        // Format Tooltip sebagai Rupiah
+                                        if (context.parsed.y >= 0) {
+                                            label += 'Rp ' + formatRupiah(context.parsed.y);
+                                        } else {
+                                            label += '(Rp ' + formatRupiah(Math.abs(context.parsed.y)) + ')';
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // ===========================================
+        // FUNGSI TAMPILAN DAN FILTER (MODIFIKASI UTAMA DI SINI)
         // ===========================================
 
         function tampilkanRingkasanKeuangan() {
@@ -887,20 +1049,22 @@
             });
 
             let totalOmset = 0;
-            let totalModalPenjualan = 0;
+            // DIHAPUS: let totalModalPenjualan = 0; 
             let totalPengeluaranLain = 0;
             let totalLabaKotorAgregasi = 0; 
+            
+            // DIHAPUS: Logika penghitungan Modal Stok (Total Modal)
+            
 
             dataTerfilter.forEach(transaksi => {
                 const jumlah = parseFloat(transaksi.jumlah) || 0; 
                 
                 if (transaksi.tipe === 'Pendapatan') {
                     totalOmset += jumlah;
-                } else if (transaksi.tipe === 'Modal Penjualan') {
-                    totalModalPenjualan += jumlah; 
                 } else if (transaksi.tipe === 'Pengeluaran') {
                     totalPengeluaranLain += jumlah;
                 } 
+                // DIHAPUS: Else if untuk Modal Penjualan
                 // AMBIL NILAI LABA KOTOR DARI SUMBER AGREGASI
                 else if (transaksi.tipe === 'Laba Kotor') {
                     totalLabaKotorAgregasi += jumlah;
@@ -915,7 +1079,8 @@
 
             // Tampilkan Hasil Ringkasan
             document.getElementById('total-omset').textContent = `Rp ${formatRupiah(totalOmset)}`;
-            document.getElementById('total-modal-penjualan').textContent = `Rp ${formatRupiah(totalModalPenjualan)}`;
+            
+            // DIHAPUS: Tampilan Total Modal
             
             const grossProfitElement = document.getElementById('total-pendapatan-kotor');
             grossProfitElement.style.color = totalPendapatanKotor < 0 ? 'var(--expense-color)' : 'var(--gross-profit-color)';
@@ -928,6 +1093,8 @@
             profitElement.textContent = totalProfit < 0 ? `(Rp ${formatRupiah(Math.abs(totalProfit))})` : `Rp ${formatRupiah(totalProfit)}`;
 
             filterTransaksi(); 
+            // Panggil render ulang chart saat filter ringkasan berubah
+            renderKeuntunganChart(); 
         }
 
         function tampilkanTabelKeuangan(filteredData = null) {
@@ -948,8 +1115,8 @@
             const limitedData = dataKeuangan.slice(0, limit);
 
             limitedData.forEach(transaksi => {
-                // Sembunyikan transaksi Laba Kotor dari tabel riwayat
-                if (transaksi.tipe === 'Laba Kotor') return; 
+                // Sembunyikan transaksi Laba Kotor dan Modal Penjualan dari tabel riwayat
+                if (transaksi.tipe === 'Laba Kotor' || transaksi.tipe === 'Modal Penjualan') return; 
                 
                 const row = document.createElement('tr');
                 let colorVar = 'var(--text-color)';
@@ -962,19 +1129,18 @@
                     colorVar = 'var(--income-color)';
                     prefix = '+ ';
                     tipeTampilan = 'Penjualan'; 
-                } else if (transaksi.tipe === 'Modal Penjualan') {
-                    colorVar = 'var(--modal-color)';
-                    prefix = '- ';
-                    tipeTampilan = 'Modal Stok'; 
                 } else if (transaksi.tipe === 'Pengeluaran') {
                     colorVar = 'var(--expense-color)';
                     prefix = '- ';
+                    tipeTampilan = 'Pengeluaran Lainnya';
                 } 
+                // DIHAPUS: Logika tampilan untuk Modal Penjualan
 
                 const jumlahFormatted = `<span style="font-weight: 600; color: ${colorVar};">${prefix}Rp ${formatRupiah(jumlahTransaksi)}</span>`;
                 
                 let actionButtons = '';
-                if (transaksi.idRef && (transaksi.idRef.startsWith('MANUAL') || transaksi.isStok)) {
+                // Hanya izinkan edit/hapus untuk transaksi MANUAL non-modal
+                if (transaksi.idRef && transaksi.idRef.startsWith('MANUAL') && transaksi.tipe !== 'Modal Penjualan') {
                     actionButtons = `
                         <button class="btn-action btn-edit" onclick="tampilkanModalEdit('${transaksi.idRef}')">
                             <i class="fas fa-edit"></i>
@@ -1009,8 +1175,8 @@
             const { start: pStart, end: pEnd } = getDatesForPeriod(periodePilihan);
 
             let dataTerfilter = dataKeuanganAwal.filter(transaksi => {
-                // Sembunyikan Laba Kotor dari filter
-                if (transaksi.tipe === 'Laba Kotor') return false; 
+                // Sembunyikan Laba Kotor dan Modal Penjualan dari filter/tabel
+                if (transaksi.tipe === 'Laba Kotor' || transaksi.tipe === 'Modal Penjualan') return false; 
                 
                 if (periodePilihan === 'Semua') return true;
                 
@@ -1029,7 +1195,12 @@
 
             dataTerfilter = dataTerfilter.filter(transaksi => {
                 const matchNama = transaksi.deskripsi.toLowerCase().includes(namaFilter);
-                const matchKategori = kategoriFilter === "" || transaksi.tipe === kategoriFilter;
+                
+                // Jika kategori filter adalah "Semua Tipe" atau "Pengeluaran", jangan ikutkan Modal Penjualan
+                let actualKategori = transaksi.tipe;
+                if(actualKategori === 'Modal Penjualan') actualKategori = 'DIHAPUS'; // Paksa tidak cocok
+
+                const matchKategori = kategoriFilter === "" || actualKategori === kategoriFilter;
 
                 const transaksiDate = new Date(transaksi.tanggal + 'T00:00:00');
                 const matchTanggalMulai = !tanggalMulaiFilter || transaksiDate >= new Date(tanggalMulaiFilter + 'T00:00:00');
@@ -1069,8 +1240,8 @@
             const newExpense = {
                 tanggal: dapatkanTanggalHariIni(),
                 deskripsi: deskripsi,
-                // Tipe internal tetap 'Modal Penjualan' untuk Modal Stok
-                tipe: kategoriPilihan === 'Pengeluaran Lainnya' ? 'Pengeluaran' : 'Modal Penjualan',
+                // Hanya ada pilihan 'Pengeluaran'
+                tipe: 'Pengeluaran',
                 jumlah: jumlah,
                 idRef: `MANUAL_${Date.now()}` 
             };
@@ -1081,9 +1252,10 @@
             tutupModalPengeluaran();
             tampilkanRingkasanKeuangan();
             tampilkanTabelKeuangan();
+            renderKeuntunganChart(); // Perbarui grafik
             
             // NOTIFIKASI SUKSES SETELAH INPUT
-            showNotification(`Transaksi berhasil ditambahkan: ${deskripsi}`, 3000);
+            showNotification(`Pengeluaran berhasil ditambahkan: ${deskripsi}`, 3000);
         });
 
         // ===========================================
@@ -1111,8 +1283,8 @@
                 return;
             }
             
-            if (transaksi.tipe === 'Laba Kotor' || (transaksi.isAggregated && transaksi.tipe === 'Pendapatan')) {
-                showNotification("Transaksi Pendapatan Kotor atau Penjualan agregasi (otomatis) tidak bisa diedit secara langsung.", 3000);
+            if (transaksi.tipe !== 'Pengeluaran') {
+                showNotification("Hanya Transaksi Pengeluaran Manual yang bisa diedit.", 3000);
                 return;
             }
 
@@ -1121,35 +1293,21 @@
             document.getElementById('edit-jumlah').value = parseFloat(transaksi.jumlah) || 0; 
             document.getElementById('edit-deskripsi').value = transaksi.deskripsi;
             
-            const tipeSelect = document.getElementById('edit-tipe');
-            if (transaksi.tipe === 'Pengeluaran') {
-                tipeSelect.value = 'Pengeluaran';
-            } else if (transaksi.tipe === 'Modal Penjualan') {
-                tipeSelect.value = 'Modal Penjualan';
-            }
+            // Tipe hanya bisa 'Pengeluaran'
+            document.getElementById('edit-tipe').value = 'Pengeluaran';
             
-            // PENTING: Kontrol apakah input diaktifkan atau tidak
-            if(transaksi.isStok) {
-                 // Blokir SEMUA edit untuk transaksi stok (otomatis)
-                 document.getElementById('edit-tanggal').disabled = true;
-                 document.getElementById('edit-deskripsi').disabled = true;
-                 document.getElementById('edit-jumlah').disabled = true;
-                 tipeSelect.disabled = true;
-                 document.getElementById('edit-tipe-info').textContent = 'PERINGATAN: Transaksi ini berasal dari Stok. Tidak bisa diubah dari sini.';
-            } else {
-                 // Izinkan edit untuk transaksi manual
-                 document.getElementById('edit-tanggal').disabled = false;
-                 document.getElementById('edit-deskripsi').disabled = false;
-                 document.getElementById('edit-jumlah').disabled = false;
-                 tipeSelect.disabled = false;
-                 document.getElementById('edit-tipe-info').textContent = 'Hanya Transaksi Manual/Stok yang bisa di Edit.';
-            }
+            // Transaksi Manual Pengeluaran diizinkan untuk diedit
+            document.getElementById('edit-tanggal').disabled = false;
+            document.getElementById('edit-deskripsi').disabled = false;
+            document.getElementById('edit-jumlah').disabled = false;
+            document.getElementById('edit-tipe').disabled = true; // Kunci tipe ke Pengeluaran
+            document.getElementById('edit-tipe-info').textContent = 'Hanya Transaksi Pengeluaran Manual yang bisa di Edit.';
             
             document.getElementById('editModal').style.display = 'flex';
         }
 
         /**
-         * Memblokir proses simpan jika transaksi adalah Stok/Otomatis.
+         * Memblokir proses simpan jika transaksi bukan Manual Pengeluaran.
          */
         function simpanEdit(event) {
             event.preventDefault();
@@ -1157,7 +1315,7 @@
             const idRef = document.getElementById('edit-idref').value;
             const tanggalBaru = document.getElementById('edit-tanggal').value;
             const deskripsiBaru = document.getElementById('edit-deskripsi').value;
-            const tipeBaru = document.getElementById('edit-tipe').value;
+            const tipeBaru = document.getElementById('edit-tipe').value; // Ini hanya bisa 'Pengeluaran'
             const jumlahBaru = parseFloat(document.getElementById('edit-jumlah').value);
 
             if (jumlahBaru <= 0 || isNaN(jumlahBaru)) {
@@ -1169,16 +1327,16 @@
             const index = dataKeuangan.findIndex(t => t.idRef === idRef);
             
             if (index !== -1) {
-                const isStok = dataKeuangan[index].isStok;
+                const isManualPengeluaran = dataKeuangan[index].idRef && dataKeuangan[index].idRef.startsWith('MANUAL') && dataKeuangan[index].tipe === 'Pengeluaran';
                 
-                // PENTING: Blokir simpan jika transaksi adalah Stok
-                if (isStok) {
-                    showNotification("Kesalahan: Transaksi Modal Stok hanya bisa diubah di halaman Stok.", 3000);
-                    tutupModalEdit(); // Tutup dan reset status input
+                // Pastikan hanya transaksi MANUAL Pengeluaran yang diubah
+                if (!isManualPengeluaran) {
+                    showNotification("Kesalahan: Hanya Transaksi Pengeluaran Manual yang dapat diubah.", 3000);
+                    tutupModalEdit(); 
                     return;
                 }
                 
-                // Hanya transaksi MANUAL yang boleh diubah
+                // Lakukan perubahan
                 dataKeuangan[index].tanggal = tanggalBaru;
                 dataKeuangan[index].jumlah = jumlahBaru;
                 dataKeuangan[index].deskripsi = deskripsiBaru;
@@ -1188,6 +1346,7 @@
                 tutupModalEdit();
                 tampilkanRingkasanKeuangan();
                 tampilkanTabelKeuangan();
+                renderKeuntunganChart(); // Perbarui grafik
                 showNotification(`Transaksi ${idRef} berhasil diperbarui.`, 3000);
             } else {
                 showNotification("Kesalahan: Transaksi tidak ditemukan saat menyimpan.", 3000);
@@ -1195,7 +1354,7 @@
         }
 
         /**
-         * Memblokir hapus jika transaksi adalah Stok/Otomatis.
+         * Memblokir hapus jika transaksi bukan Manual Pengeluaran.
          */
         function hapusTransaksi(idRef) {
             let dataKeuangan = JSON.parse(localStorage.getItem('dataKeuangan')) || [];
@@ -1203,16 +1362,12 @@
 
             if (!transaksi) return;
 
-            if (transaksi.tipe === 'Laba Kotor' || (transaksi.isAggregated && transaksi.tipe === 'Pendapatan')) {
-                showNotification("Transaksi otomatis (Penjualan/Laba Kotor) tidak bisa dihapus.", 3000);
+            // Blokir hapus untuk semua yang bukan Pengeluaran Manual
+            if (transaksi.tipe !== 'Pengeluaran' || !transaksi.idRef.startsWith('MANUAL')) {
+                showNotification("Hanya Transaksi Pengeluaran Manual yang bisa dihapus.", 3000);
                 return;
             }
             
-            if (transaksi.isStok) {
-                showNotification("Transaksi Modal Pembelian Stok tidak bisa dihapus dari sini. Harap hapus atau ubah entri di halaman Stok.", 3000);
-                return;
-            }
-
             const deskripsiSingkat = transaksi.deskripsi.length > 30 ? transaksi.deskripsi.substring(0, 27) + '...' : transaksi.deskripsi;
             if (confirm(`Anda yakin ingin menghapus transaksi "${deskripsiSingkat}" senilai Rp ${formatRupiah(transaksi.jumlah)}?`)) {
                 
@@ -1221,6 +1376,7 @@
                 
                 tampilkanRingkasanKeuangan();
                 tampilkanTabelKeuangan();
+                renderKeuntunganChart(); // Perbarui grafik
                 showNotification("Transaksi berhasil dihapus.", 3000);
             }
         }
