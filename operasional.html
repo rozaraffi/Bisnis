@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Operasional | Aplikasi Bisnis</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #007BFF;
+            --primary-dark: #0056b3;
+            --background-light: #f4f6f9;
+            --card-background: #ffffff;
+            --text-color: #34495e;
+            --light-text: #6c757d;
+            --shadow-color: rgba(0, 0, 0, 0.07);
+            --border-color: #e9ecef;
+            --success-color: #20c997;
+            --danger-color: #e74c3c;
+            --warning-color: #ffc107;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-color);
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            color: var(--primary-dark);
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .page-subtitle {
+            text-align: center;
+            color: var(--light-text);
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 16px;
+            padding: 25px 30px;
+            box-shadow: 0 5px 25px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .full-width {
+             grid-column: 1 / -1;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .summary-card {
+            background: #fdfdfd;
+            padding: 20px;
+            border-radius: 12px;
+            border-bottom: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .summary-card .icon {
+            font-size: 2em;
+            padding: 15px;
+            border-radius: 50%;
+            color: white;
+        }
+        
+        .summary-card .text h4 {
+            margin: 0 0 5px 0;
+            font-size: 0.9em;
+            color: var(--light-text);
+            font-weight: 500;
+        }
+        
+        .summary-card .text .amount {
+            font-size: 1.6em;
+            font-weight: 600;
+        }
+
+        #modal-awal { border-color: var(--warning-color); }
+        #modal-awal .icon { background-color: var(--warning-color); }
+        #modal-awal .amount { color: var(--warning-color); }
+        
+        #total-pemasukan { border-color: var(--success-color); }
+        #total-pemasukan .icon { background-color: var(--success-color); }
+        #total-pemasukan .amount { color: var(--success-color); }
+
+        #total-pengeluaran { border-color: var(--danger-color); }
+        #total-pengeluaran .icon { background-color: var(--danger-color); }
+        #total-pengeluaran .amount { color: var(--danger-color); }
+        
+        #saldo-akhir { border-color: var(--primary-dark); }
+        #saldo-akhir .icon { background-color: var(--primary-dark); }
+        #saldo-akhir .amount { color: var(--primary-dark); }
+        
+        /* Form & Transaction List */
+        h3 {
+           font-size: 1.5em;
+           color: var(--primary-dark);
+           margin-top: 0;
+           margin-bottom: 20px;
+           border-bottom: 2px solid var(--border-color);
+           padding-bottom: 10px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover { background-color: var(--primary-dark); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th { font-weight: 600; font-size: 0.9em; color: var(--light-text); }
+        tbody tr:nth-child(even) { background-color: #f8f9fa; }
+        
+        .amount-col { text-align: right; font-weight: 600; font-family: 'Courier New', Courier, monospace; font-size: 1.1em;}
+        .pemasukan-col { color: var(--success-color); }
+        .pengeluaran-col { color: var(--danger-color); }
+        
+        .tag {
+            font-size: 0.75em;
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        .tag.auto { background-color: var(--primary-color); }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--light-text);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 576px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1><i class="fas fa-cash-register"></i> Kas Operasional</h1>
+        <p class="page-subtitle" id="tanggal-hari-ini"></p>
+
+        <div class="main-grid">
+            <div class="card full-width">
+                 <div class="summary-grid">
+                    <div class="summary-card" id="modal-awal">
+                        <div class="icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+                        <div class="text">
+                            <h4>Modal Awal</h4>
+                            <span class="amount" id="modal-awal-val"></span>
+                        </div>
+                    </div>
+                    <div class="summary-card" id="total-pemasukan">
+                        <div class="icon"><i class="fa-solid fa-arrow-up"></i></div>
+                        <div class="text">
+                            <h4>Total Pemasukan</h4>
+                            <span class="amount" id="total-pemasukan-val"></span>
+                        </div>
+                    </div>
+                    <div class="summary-card" id="total-pengeluaran">
+                        <div class="icon"><i class="fa-solid fa-arrow-down"></i></div>
+                        <div class="text">
+                            <h4>Total Pengeluaran</h4>
+                            <span class="amount" id="total-pengeluaran-val"></span>
+                        </div>
+                    </div>
+                    <div class="summary-card" id="saldo-akhir">
+                        <div class="icon"><i class="fa-solid fa-wallet"></i></div>
+                        <div class="text">
+                            <h4>Saldo Akhir</h4>
+                            <span class="amount" id="saldo-akhir-val"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fa-solid fa-pencil"></i> Input Transaksi Manual</h3>
+                 <form id="transaction-form">
+                    <div class="form-group">
+                        <label for="deskripsi">Deskripsi</label>
+                        <input type="text" id="deskripsi" placeholder="Contoh: Beli Air Galon" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jumlah">Jumlah (Rp)</label>
+                        <input type="number" id="jumlah" placeholder="50000" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipe">Tipe Transaksi</label>
+                        <select id="tipe">
+                            <option value="pengeluaran">Pengeluaran</option>
+                            <option value="pemasukan">Pemasukan</option>
+                        </select>
+                    </div>
+                    <button type="submit"><i class="fas fa-plus"></i> Tambah Transaksi</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3><i class="fa-solid fa-receipt"></i> Detail Transaksi Hari Ini</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Deskripsi</th>
+                            <th class="amount-col">Pemasukan</th>
+                            <th class="amount-col">Pengeluaran</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transaction-list">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element References ---
+            const form = document.getElementById('transaction-form');
+            const elements = {
+                modalAwal: document.getElementById('modal-awal-val'),
+                totalPemasukan: document.getElementById('total-pemasukan-val'),
+                totalPengeluaran: document.getElementById('total-pengeluaran-val'),
+                saldoAkhir: document.getElementById('saldo-akhir-val'),
+                transactionList: document.getElementById('transaction-list'),
+                tanggalHariIni: document.getElementById('tanggal-hari-ini'),
+                deskripsi: document.getElementById('deskripsi'),
+                jumlah: document.getElementById('jumlah'),
+                tipe: document.getElementById('tipe')
+            };
+
+            // --- Utility Functions ---
+            const formatDate = date => new Date(date).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const formatCurrency = amount => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+            const getTodayString = () => new Date().toISOString().split('T')[0];
+            const getYesterdayString = () => {
+                const d = new Date();
+                d.setDate(d.getDate() - 1);
+                return d.toISOString().split('T')[0];
+            };
+
+            // --- Data Management ---
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            const saveTransactions = () => localStorage.setItem('transactions', JSON.stringify(transactions));
+
+            const calculateBalanceUpToDate = (dateString) => {
+                const targetDate = new Date(dateString);
+                return transactions
+                    .filter(t => new Date(t.date) <= targetDate)
+                    .reduce((balance, t) => balance + (t.tipe === 'pemasukan' ? t.jumlah : -t.jumlah), 0);
+            };
+
+            // --- NEW: Sync with Other Pages ---
+            const syncAutomaticTransactions = () => {
+                const today = getTodayString();
+                
+                // 1. Sync from penjualantoday.html
+                const salesData = JSON.parse(localStorage.getItem('dailySalesTotal')) || { date: '', total: 0 };
+                if (salesData.date === today && salesData.total > 0) {
+                    const existingSale = transactions.find(t => t.date === today && t.otomatis === 'penjualan');
+                    if (existingSale) {
+                        existingSale.jumlah = salesData.total; // Update if already exists
+                    } else {
+                        transactions.push({ id: Date.now() + 1, date: today, deskripsi: 'Total Penjualan', jumlah: salesData.total, tipe: 'pemasukan', otomatis: 'penjualan' });
+                    }
+                }
+
+                // 2. Sync from stok.html
+                const stockData = JSON.parse(localStorage.getItem('dailyStockPurchaseTotal')) || { date: '', total: 0 };
+                 if (stockData.date === today && stockData.total > 0) {
+                    const existingStock = transactions.find(t => t.date === today && t.otomatis === 'stok');
+                    if (existingStock) {
+                        existingStock.jumlah = stockData.total; // Update if already exists
+                    } else {
+                        transactions.push({ id: Date.now() + 2, date: today, deskripsi: 'Total Kulakan Stok', jumlah: stockData.total, tipe: 'pengeluaran', otomatis: 'stok' });
+                    }
+                }
+                
+                saveTransactions();
+            };
+
+            // --- Render Function ---
+            const render = () => {
+                const today = getTodayString();
+                elements.tanggalHariIni.textContent = formatDate(today);
+                elements.transactionList.innerHTML = '';
+
+                const todayTransactions = transactions.filter(t => t.date === today);
+
+                if (todayTransactions.length === 0) {
+                    elements.transactionList.innerHTML = `<tr><td colspan="3" class="empty-state">Belum ada transaksi hari ini.</td></tr>`;
+                } else {
+                    todayTransactions.forEach(t => {
+                        const row = document.createElement('tr');
+                        const isPemasukan = t.tipe === 'pemasukan';
+                        row.innerHTML = `
+                            <td>${t.deskripsi} ${t.otomatis ? '<span class="tag auto">Otomatis</span>' : ''}</td>
+                            <td class="amount-col pemasukan-col">${isPemasukan ? formatCurrency(t.jumlah) : '-'}</td>
+                            <td class="amount-col pengeluaran-col">${!isPemasukan ? formatCurrency(t.jumlah) : '-'}</td>
+                        `;
+                        elements.transactionList.appendChild(row);
+                    });
+                }
+                
+                // Update summary
+                const modalAwal = calculateBalanceUpToDate(getYesterdayString());
+                const totalPemasukan = todayTransactions.filter(t => t.tipe === 'pemasukan').reduce((sum, t) => sum + t.jumlah, 0);
+                const totalPengeluaran = todayTransactions.filter(t => t.tipe === 'pengeluaran').reduce((sum, t) => sum + t.jumlah, 0);
+                
+                elements.modalAwal.textContent = formatCurrency(modalAwal);
+                elements.totalPemasukan.textContent = formatCurrency(totalPemasukan);
+                elements.totalPengeluaran.textContent = formatCurrency(totalPengeluaran);
+                elements.saldoAkhir.textContent = formatCurrency(modalAwal + totalPemasukan - totalPengeluaran);
+            };
+
+            // --- Event Listeners ---
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newTransaction = {
+                    id: Date.now(),
+                    date: getTodayString(),
+                    deskripsi: elements.deskripsi.value,
+                    jumlah: +elements.jumlah.value,
+                    tipe: elements.tipe.value
+                };
+                transactions.push(newTransaction);
+                saveTransactions();
+                render();
+                form.reset();
+            });
+
+            // --- Initialization ---
+            const init = () => {
+                syncAutomaticTransactions();
+                render();
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>
